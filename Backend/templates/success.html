@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Scraping Completed</title>
+</head>
+<body>
+    <h1>Scraping Completed!</h1>
+    <p>Your file has been generated and is ready for download.</p>
+    <a href="{{ url_for('download_latest') }}"><button>Download File</button></a>
+    <p><a href="/">Go back to Home</a></p>
+</body>
+</html>

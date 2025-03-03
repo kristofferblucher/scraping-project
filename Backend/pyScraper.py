@@ -1,9 +1,15 @@
+import shutil
+import threading
+from flask import Flask, request, send_from_directory, render_template_string, render_template
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import datetime
 import re
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import os
+
+app = Flask(__name__)
 
 def get_full_urls(url):
     """Henter alle auksjons-URLer fra en gitt side."""
@@ -119,15 +125,10 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import datetime
 
-# Antar at andre nødvendige funksjoner som get_full_urls, get_auction_item_urls, get_auction_item_data er definert ovenfor
 
-def main():
-    max_auctions = input("Hvor mange auksjoner vil du hente? (La tom for alle): ")
-    max_items_per_auction = input("Hvor mange objekter per auksjon? (La tom for alle): ")
 
-    max_auctions = int(max_auctions) if max_auctions.isdigit() else None
-    max_items_per_auction = int(max_items_per_auction) if max_items_per_auction.isdigit() else None
 
+def main(max_auctions=None, max_items_per_auction=None):
     base_url = 'https://auksjon.oslomyntgalleri.no/Events'
     page = 1
     all_auction_urls = []
@@ -170,8 +171,57 @@ def main():
     df = df[columns]
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     filename = f"auksjonsdata_{timestamp}.xlsx"
+    latest_filename = "auksjonsdata_latest.xlsx"
+
     df.to_excel(filename, index=False)
-    print("Data eksportert til auksjonsdata.xlsx")
+    print(f"Data eksportert til {filename}")
+
+    shutil.copy(filename, latest_filename)
+    print(f"Siste versjon av filen lagret som {latest_filename}")
+
+    return latest_filename
+
+
+
+
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        print("Received POST request")  # ✅ Debug print 1
+        max_auctions = request.form.get('max_auctions')
+        max_items_per_auction = request.form.get('max_items_per_auction')
+        max_auctions = int(max_auctions) if max_auctions and max_auctions.isdigit() else None
+        max_items_per_auction = int(max_items_per_auction) if max_items_per_auction and max_items_per_auction.isdigit() else None
+        
+        try:
+            print("Calling main()...")  # ✅ Debug print 2
+            file_path = main(max_auctions, max_items_per_auction)
+            print(f"File generated: {file_path}")  # ✅ Debug print 3
+            print("Rendering success.html...")  # ✅ Debug print 4
+            return render_template('success.html', file_path=file_path)
+        except Exception as e:
+            print(f"Error in main(): {e}")
+            return str(e), 500  # Show the error in the browser
+
+    return render_template('index.html')
+
+
+@app.route('/download-latest')
+def download_latest():
+    filename = "auksjonsdata_latest.xlsx"
+    if not os.path.exists(filename):
+        return "No file found. Please run the scraper first.", 404
+    return send_from_directory(directory='.', path=filename, as_attachment=True)
+
+@app.route('/view-latest-data')
+def view_latest_data():
+    filename = "auksjonsdata_latest.xlsx"
+    if not os.path.exists(filename):
+        return "No data available. Please run the scraper first.", 404
+    df = pd.read_excel(filename)
+    return df.to_html()
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

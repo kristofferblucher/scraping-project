@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auksjonsdata Håndtering</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Velkommen til Auksjonsdata Viewer</h1>
+    
+    <!-- Skjema for å sende data -->
+    <form action="/" method="post">
+        <label for="max_auctions">Maks auksjoner:</label>
+        <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
+        
+        <label for="max_items_per_auction">Maks objekter per auksjon:</label>
+        <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
+        
+        <button type="submit">Start Skraping</button>
+    </form>
+
+</body>
+</html>
