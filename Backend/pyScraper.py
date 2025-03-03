@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import datetime
+import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def get_full_urls(url):
     """Henter alle auksjons-URLer fra en gitt side."""
@@ -53,13 +56,37 @@ def get_auction_item_data(item_url):
     soup = BeautifulSoup(html, 'html.parser')
     
     item_data = {}
-    item_data['Objekt'] = soup.find('h1', class_='detail__title').text.strip() if soup.find('h1', class_='detail__title') else ''
+    full_title = soup.find('h1', class_='detail__title').text.strip() if soup.find('h1', class_='detail__title') else ''
+    
+    # Endret regex for å inkludere alt etter "kroner"
+    match = re.search(r'(\d+\s*kroner)(.*)', full_title, re.IGNORECASE)
+    if match:
+        item_data['Objekt'] = match.group(1).strip()
+        item_data['År'] = match.group(2).strip()
+    else:
+        match = re.search(r'\b(\d{4})\b', full_title)
+        if match:
+            year_index = match.start(0)
+            item_data['Objekt'] = full_title[:year_index].strip()
+            item_data['År'] = full_title[year_index:].strip()
+        else:
+            item_data['Objekt'] = full_title
+            item_data['År'] = ''
+
+    # Tillegg for å hente ut subtitle informasjon om "Konge"
+    subtitle = soup.find('span', class_='lead detail__subtitle')
+    item_data['Konge'] = subtitle.text.strip() if subtitle else ''
+
+    # Hent "Type" fra meta-tag 'keywords'
+    keywords_meta = soup.find('meta', {'name': 'keywords'})
+    item_data['Type'] = keywords_meta['content'] if keywords_meta else ''
+
     item_data['Vinnerbud'] = soup.find('span', class_='NumberPart').text.strip().replace('\xa0', '') if soup.find('span', class_='NumberPart') else ''
     item_data['Objekt nr'] = soup.find('strong').text.replace('Objektnr.', '').strip() if soup.find('strong') else ''
     auction_info = soup.find('span', class_='h5').text.strip() if soup.find('span', class_='h5') else ''
     item_data['Auksjonshus + auksjonsnummer'] = auction_info
 
-    # Henter alle "detail__custom-fields" data
+    # Extract custom fields data
     custom_fields = soup.find_all('div', class_='detail__custom-fields')
     for field in custom_fields:
         field_name = field.find('span', class_='detail__field-name').text.strip().replace(':', '') if field.find('span', class_='detail__field-name') else ''
@@ -67,11 +94,8 @@ def get_auction_item_data(item_url):
         if field_name and field_value:
             item_data[field_name] = field_value
             print(f"Field Name: {field_name}, Field Value: {field_value}")
-            
-            if field_name.lower() == 'land':
-                item_data['Land'] = field_value
 
-    # Beregn vinnerbud + salær (20 % tillegg)
+    # Calculate winning bid + premium (20% addition)
     if item_data['Vinnerbud']:
         try:
             vinnerbud = float(item_data['Vinnerbud'].replace('.', '').replace(',', '.'))
@@ -82,11 +106,20 @@ def get_auction_item_data(item_url):
     else:
         item_data['Vinnerbud + salær'] = ''
 
-
     print(f"Hentet data for objekt: {item_data['Objekt']}")
 
     return item_data
 
+
+
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import datetime
+
+# Antar at andre nødvendige funksjoner som get_full_urls, get_auction_item_urls, get_auction_item_data er definert ovenfor
 
 def main():
     max_auctions = input("Hvor mange auksjoner vil du hente? (La tom for alle): ")
@@ -98,7 +131,6 @@ def main():
     base_url = 'https://auksjon.oslomyntgalleri.no/Events'
     page = 1
     all_auction_urls = []
-    item_data_list = []
 
     while True:
         url = f"{base_url}?page={page}"
@@ -111,41 +143,35 @@ def main():
             break
         page += 1
 
-    for auction_url in all_auction_urls:
-        print(f"Besøker auksjonsside: {auction_url}")
-        item_urls = get_auction_item_urls(auction_url, max_items_per_auction=max_items_per_auction)
-        for item_url in item_urls:
-            item_data = get_auction_item_data(item_url)
+    item_data_list = []
+    # Bruk ThreadPoolExecutor for å parallellisere datainnhenting
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        # Opprett en fremtidig til hver URL
+        future_to_url = {executor.submit(get_auction_item_data, item_url): item_url for auction_url in all_auction_urls for item_url in get_auction_item_urls(auction_url, max_items_per_auction)}
+        # Iterer gjennom fullførte futures og hent resultatene
+        for future in as_completed(future_to_url):
+            item_data = future.result()
             item_data_list.append(item_data)
+            print(f"Hentet data for: {item_data['Objekt']}")
 
     df = pd.DataFrame(item_data_list)
 
     # Spesifiser ønsket kolonnerekkefølge med "Vinnerbud + salær" rett etter "Vinnerbud"
     columns = [
-        'Objekt', 
-        'Vinnerbud', 
-        'Vinnerbud + salær',  # Legg denne rett etter "Vinnerbud"
-        'Objekt nr', 
-        'Land', 
-        'Utgave (for sedler), Pregested (for mynter)', 
-        'Referanse', 
-        'Referanse 2', 
-        'Referanse 3',
-        'Referanse 4',
-        'Auksjonshus + auksjonsnummer', 
-        'Info/kommentar/provinens',
-        'Proveniens',
-        'proveniens',
-
+        'Objekt', 'År', 'Vinnerbud', 'Vinnerbud + salær', 'Type', 'Objekt nr', 
+        'Land', 'Utgave (for sedler), Pregested (for mynter)', 'Referanse', 
+        'Referanse 2', 'Referanse 3', 'Referanse 4', 'Auksjonshus + auksjonsnummer', 
+        'Info/kommentar/provinens', 'Proveniens', 'Konge'
     ]
 
     # Behold kun de kolonnene som faktisk finnes i dataframen
     columns = [col for col in columns if col in df.columns]
 
     df = df[columns]
-    df.to_excel('auksjonsdata.xlsx', index=False)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    filename = f"auksjonsdata_{timestamp}.xlsx"
+    df.to_excel(filename, index=False)
     print("Data eksportert til auksjonsdata.xlsx")
-
 
 if __name__ == "__main__":
     main()
