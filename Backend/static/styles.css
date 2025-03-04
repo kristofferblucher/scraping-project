@@ -6,8 +6,8 @@ body {
     padding: 20px;
     color: #333;
 }
-h1 {
 
+h1 {
     margin-bottom: 60px;
     font-size: 60px;
     text-align: center;
@@ -18,7 +18,6 @@ h2 {
     margin-bottom: 20px;
     font-size: 30px;
     text-align: left;
-
 }
 
 form {
@@ -28,7 +27,6 @@ form {
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
-    
 }
 
 label {
@@ -37,7 +35,7 @@ label {
 }
 
 input[type="text"] {
-    width: calc(20% - 22px);
+    width: calc(30% - 22px); /* Justert bredde for full bredde innenfor skjema */
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ccc;
@@ -54,12 +52,40 @@ button {
     display: inline-block;
     font-size: 16px;
     margin: 4px 2px;
+    margin-left: 100px;
     cursor: pointer;
     border-radius: 4px;
-    width: 15%;
+    width: 15%; /* Auto width for bedre kontroll på plassering og størrelse */
+    place-items: center; /* Sentrerer knappen */
 }
 
 button:hover {
     background-color: #0056b3;
 }
 
+.loading-container {
+    width: 30%; /* Justert bredde for visning ved siden av skjema */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column; /* Elementer stablet vertikalt */
+
+    margin-left: 600px;
+}
+
+#loadingMessage {
+    display: none;
+    font-size: 25px;
+    color: black; /* Justert for bedre synlighet */
+    text-align: left; /* Sentrerer teksten */
+
+}
+
+#stopButton {
+    display: none;
+    color: white;
+    background-color: red;
+    padding: 10px 20px;
+    border-radius: 4px;
+    margin-top: 20px; /* Ekstra margin for å separere fra startknappen */
+}

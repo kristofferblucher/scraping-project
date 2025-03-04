@@ -1,5 +1,5 @@
 import shutil
-import threading
+from threading import Event
 from flask import Flask, request, send_from_directory, render_template_string, render_template
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
@@ -11,6 +11,7 @@ import os
 import numpy as np
 
 app = Flask(__name__)
+stop_event = Event()
 
 def get_full_urls(url):
     """Henter alle auksjons-URLer fra en gitt side."""
@@ -26,6 +27,9 @@ def get_auction_item_urls(auction_url, max_items_per_auction=None):
     item_urls = []
     current_page = 0
     while auction_url:
+        if stop_event.is_set():
+            return None
+
         response = requests.get(auction_url)
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
@@ -57,6 +61,10 @@ def get_auction_item_urls(auction_url, max_items_per_auction=None):
 
 
 def get_auction_item_data(item_url):
+
+    if stop_event.is_set():
+        return None
+
     """Henter detaljert informasjon om et auksjonsobjekt."""
     response = requests.get(item_url)
     html = response.text
@@ -141,6 +149,11 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 def main(max_auctions=None, max_items_per_auction=None, search_term=None, search_term_year=None):
+    global stop_event
+    stop_event.clear()
+    if stop_event.is_set():
+        return None
+
     base_url = 'https://auksjon.oslomyntgalleri.no/Events'
     page = 1
     all_auction_urls = []
@@ -157,6 +170,7 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
         page += 1
 
     item_data_list = []
+
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_url = {
             executor.submit(get_auction_item_data, item_url): item_url
@@ -165,6 +179,10 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
         }
 
         for future in as_completed(future_to_url):
+            if stop_event.is_set():
+                executor.shutdown(wait=False)  # Avbryter pågående tasks
+                break
+
             item_data = future.result()
             if search_term or search_term_year:
                 objekt_navn = item_data.get("Objekt", "").lower()
@@ -272,6 +290,13 @@ def view_latest_data():
         return "No data available. Please run the scraper first.", 404
     df = pd.read_excel(filename)
     return df.to_html()
+
+@app.route('/stop', methods=['POST'])
+def stop_scraping():
+    stop_event.set()  # Aktiverer stop-hendelsen
+    print("Scraping requested to stop.")
+    return render_template('index.html', message="Scraping has been stopped.")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

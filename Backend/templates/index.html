@@ -5,29 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auksjonsdata Håndtering</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <script type="text/javascript">
+        function showLoading() {
+            var auctions = document.getElementById('max_auctions').value || 'alle';
+            var items = document.getElementById('max_items_per_auction').value || 'alle';
+            var searchTerm = document.getElementById('search_term').value || 'ingen';
+            var searchYear = document.getElementById('search_term_year').value || 'ingen';
+
+            var loadingMessage = 
+                                "<br>" +
+                                "<div><strong>Scraperen henter nå data for følgende parametre: </strong></div>" +
+                                "<br>" +
+                                "<div><strong>Antall auksjoner:</strong> " + auctions + "</div>" +
+                                 "<div><strong>Antall objekter per auksjon:</strong> " + items + "</div>" +
+                                 "<div><strong>Filtrer etter ord i objekt-kolonnen:</strong> " + searchTerm + "</div>" +
+                                 "<div><strong>Filtrer etter ord i års-kolonnen:</strong> " + searchYear + "</div>";
+
+            document.getElementById('loadingMessage').innerHTML = loadingMessage;
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('submitButton').disabled = true; // Deaktiverer send-knappen for å unngå flere innsendinger
+            document.getElementById('stopButton').style.display = 'block'; // Viser stoppknappen
+        }
+
+        window.onload = function() {
+            document.getElementById('stopButton').style.display = 'none'; // Skjuler stoppknappen ved innlasting
+        }
+    </script>
 </head>
 <body>
     <h1>Auksjonsdata-Scraperen</h1>
 
     <h2> Parametre: </h2>
-    <!-- Skjema for å sende data -->
-    <form action="/" method="post">
-        <label for="max_auctions">Antall auksjoner (blank for alle):</label>
-        <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
+    <div class="content-container">
+        <!-- Skjema-seksjon -->
+        <div class="form-container">
+          <form action="/" method="post" onsubmit="showLoading()">
+            <label for="max_auctions">Antall auksjoner (blank for alle):</label>
+            <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
+            
+            <label for="max_items_per_auction">Antall objekter per auksjon (blank for alle):</label>
+            <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
+      
+            <label for="search_term">Filtrer etter ord i objekt-kolonnen (valgfritt):</label>
+            <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
+      
+            <label for="search_term_year">Filtrer etter ord i års-kolonnen (valgfritt):</label>
+            <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
+      
+            <button type="submit" id="submitButton">Start Skraping</button>
+             <button type="submit" id="stopButton" formaction="/stop" style="display:none;">Stopp Scraping</button>
+          </form>
+        </div>
         
-        <label for="max_items_per_auction">Antall objekter per auksjon (blank for alle):</label>
-        <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
-
-        <label for="search_term">Filtrer etter ord i objekt-kolonnen (valgfritt):</label>
-        <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
-
-        <label for="search_term_year">Filtrer etter ord i års-kolonnen (valgfritt):</label>
-        <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
-
-        
-        
-        <button type="submit">Start Skraping</button>
-    </form>
-
+        <!-- Loading-melding-seksjon -->
+        <div class="loading-container">
+            <div id="loadingMessage" style="display:none;"></div>
+          </div>
+        </div>
 </body>
 </html>
