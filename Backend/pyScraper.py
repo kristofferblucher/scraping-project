@@ -231,14 +231,28 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
 
 
 
+def log_user_activity(activity):
+    with open('scraping_log.txt', 'a') as file:
+        file.write(f"{datetime.datetime.now().isoformat()}: {activity}\n")
 
+
+scraping_active = False
 #Flask Logikk: 
 
 
+scraping_active = False  # Global variabel for å spore scraping-status
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global scraping_active
+
     if request.method == 'POST':
+        if scraping_active:
+            return "Scraping is already in progress. Please wait or stop the current process.", 400
+        
         print("Received POST request")  
+        scraping_active = True  # Marker at scraping er i gang
+
         max_auctions = request.form.get('max_auctions')
         max_items_per_auction = request.form.get('max_items_per_auction')
         search_term = request.form.get('search_term')
@@ -246,23 +260,28 @@ def index():
 
         print(f"Captured search_term: '{search_term}'")
 
+        activity = f"Scraped max_auctions={max_auctions}, max_items_per_auction={max_items_per_auction}, search_term={search_term}, search_term_year={search_term_year}"
+        log_user_activity(activity)
+
         max_auctions = int(max_auctions) if max_auctions and max_auctions.isdigit() else None
         max_items_per_auction = int(max_items_per_auction) if max_items_per_auction and max_items_per_auction.isdigit() else None
         search_term = search_term.strip().lower() if search_term else None
         search_term_year = search_term_year.strip().lower() if search_term_year else None
 
-        
         try:
             print("Calling main()...")  
             file_path = main(max_auctions, max_items_per_auction, search_term, search_term_year)
             print(f"File generated: {file_path}")  
             print("Rendering success.html...")  
-            return render_template('success.html', file_path=file_path)
+            scraping_active = False  # Scraping er ferdig
+            return render_template('success.html', file_path=file_path, scraping_active=scraping_active)
         except Exception as e:
+            scraping_active = False  # Sett status til inaktiv hvis det feiler
             print(f"Error in main(): {e}")
             return str(e), 500  
 
-    return render_template('index.html')
+    return render_template('index.html', scraping_active=scraping_active)
+
 
 
 
@@ -293,9 +312,24 @@ def view_latest_data():
 
 @app.route('/stop', methods=['POST'])
 def stop_scraping():
+    global scraping_active
     stop_event.set()  # Aktiverer stop-hendelsen
     print("Scraping requested to stop.")
-    return render_template('index.html', message="Scraping has been stopped.")
+    scraping_active = False
+    return render_template('index.html', message="Scraping has been stopped.", scraping_active=scraping_active)
+
+@app.route('/scraping-log')
+def view_scraping_log():
+    log_file = 'scraping_log.txt'
+    
+    # Sjekk om filen eksisterer før du prøver å lese den
+    if not os.path.exists(log_file):
+        log_entries = []  # Hvis filen ikke finnes, bruk en tom liste
+    else:
+        with open(log_file, 'r') as file:
+            log_entries = file.readlines()
+
+    return render_template('scraping_log.html', log_entries=log_entries)
 
 
 if __name__ == "__main__":

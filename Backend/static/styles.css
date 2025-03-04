@@ -64,7 +64,7 @@ button:hover {
 }
 
 .loading-container {
-    width: 30%; /* Justert bredde for visning ved siden av skjema */
+    width: 40%; /* Justert bredde for visning ved siden av skjema */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -89,3 +89,50 @@ button:hover {
     border-radius: 4px;
     margin-top: 20px; /* Ekstra margin for å separere fra startknappen */
 }
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff; /* Blå bakgrunn */
+    color: white;
+    text-decoration: none; /* Fjerner understrek */
+    border-radius: 5px; /* Runde hjørner */
+    font-weight: bold;
+    font-size: 16px;
+    text-align: center;
+    transition: background 0.3s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #0056b3; /* Mørkere blå ved hover */
+}
+
+
+
+/* Sentral spinner */
+.spinner-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10; /* Sikrer at spinneren ligger over innholdet */
+    display: none;
+}
+
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #007bff; /* Blå farge på toppdelen */
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+/* Spinner-animasjon */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+

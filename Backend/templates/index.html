@@ -5,63 +5,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auksjonsdata Håndtering</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
-    <script type="text/javascript">
-        function showLoading() {
-            var auctions = document.getElementById('max_auctions').value || 'alle';
-            var items = document.getElementById('max_items_per_auction').value || 'alle';
-            var searchTerm = document.getElementById('search_term').value || 'ingen';
-            var searchYear = document.getElementById('search_term_year').value || 'ingen';
-
-            var loadingMessage = 
-                                "<br>" +
-                                "<div><strong>Scraperen henter nå data for følgende parametre: </strong></div>" +
-                                "<br>" +
-                                "<div><strong>Antall auksjoner:</strong> " + auctions + "</div>" +
-                                 "<div><strong>Antall objekter per auksjon:</strong> " + items + "</div>" +
-                                 "<div><strong>Filtrer etter ord i objekt-kolonnen:</strong> " + searchTerm + "</div>" +
-                                 "<div><strong>Filtrer etter ord i års-kolonnen:</strong> " + searchYear + "</div>";
-
-            document.getElementById('loadingMessage').innerHTML = loadingMessage;
-            document.getElementById('loadingMessage').style.display = 'block';
-            document.getElementById('submitButton').disabled = true; // Deaktiverer send-knappen for å unngå flere innsendinger
-            document.getElementById('stopButton').style.display = 'block'; // Viser stoppknappen
-        }
-
-        window.onload = function() {
-            document.getElementById('stopButton').style.display = 'none'; // Skjuler stoppknappen ved innlasting
-        }
-    </script>
 </head>
 <body>
-    <h1>Auksjonsdata-Scraperen</h1>
+
+    <h1>Auksjonsdata-Scraperen 🪙 </h1>
+
+    <!-- Scraping-logg-knapp (Deaktiveres når scraping starter) -->
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="/scraping-log" class="btn" id="log-button">Scraping-logg</a>
+        <p id="warning-message" style="color: red; display: none;">⚠️ Stopp scraperen før du ser loggen.</p>
+    </div>
 
     <h2> Parametre: </h2>
     <div class="content-container">
+
+                <!-- Lastesymbol (spinner) -->
+                <div id="loadingSpinner" class="spinner-overlay" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+        
         <!-- Skjema-seksjon -->
         <div class="form-container">
-          <form action="/" method="post" onsubmit="showLoading()">
-            <label for="max_auctions">Antall auksjoner (blank for alle):</label>
-            <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
-            
-            <label for="max_items_per_auction">Antall objekter per auksjon (blank for alle):</label>
-            <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
-      
-            <label for="search_term">Filtrer etter ord i objekt-kolonnen (valgfritt):</label>
-            <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
-      
-            <label for="search_term_year">Filtrer etter ord i års-kolonnen (valgfritt):</label>
-            <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
-      
-            <button type="submit" id="submitButton">Start Skraping</button>
-             <button type="submit" id="stopButton" formaction="/stop" style="display:none;">Stopp Scraping</button>
-          </form>
+            <form action="/" method="post" onsubmit="showLoading()">
+                <label for="max_auctions">Antall auksjoner (blank for alle):</label>
+                <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
+                
+                <label for="max_items_per_auction">Antall objekter per auksjon (blank for alle):</label>
+                <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
+          
+                <label for="search_term">Filtrer etter ord i objekt-kolonnen (valgfritt):</label>
+                <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
+          
+                <label for="search_term_year">Filtrer etter ord i års-kolonnen (valgfritt):</label>
+                <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
+          
+                <button type="submit" id="submitButton">Start Skraping</button>
+                <button type="submit" id="stopButton" formaction="/stop" style="display:none;">Stopp Scraping</button>
+            </form>
         </div>
+
+        
         
         <!-- Loading-melding-seksjon -->
         <div class="loading-container">
             <div id="loadingMessage" style="display:none;"></div>
-          </div>
         </div>
+    </div>
+
+    <script>
+        let scrapingActive = {{ scraping_active | default(false) | tojson }};
+
+        document.addEventListener("DOMContentLoaded", function() {
+            let logButton = document.getElementById("log-button");
+            let warningMessage = document.getElementById("warning-message");
+            let stopButton = document.getElementById("stopButton");
+
+            if (stopButton) {
+                stopButton.style.display = 'none';  // Skjuler stoppknappen ved innlasting
+            }
+
+            if (scrapingActive) {
+                disableLogButton(); // Sørger for at knappen er deaktivert ved sidenavigering
+            }
+
+            logButton.addEventListener("click", function(event) {
+                if (scrapingActive) {
+                    event.preventDefault();  // Stopper lenken fra å åpne
+                    warningMessage.style.display = "block";  // Viser advarsel
+                }
+            });
+        });
+
+        function showLoading() {
+            disableLogButton(); // Deaktiver knappen umiddelbart ved start
+
+            document.getElementById("loadingSpinner").style.display = "block";
+
+            var auctions = document.getElementById('max_auctions') ? document.getElementById('max_auctions').value : 'alle';
+            var items = document.getElementById('max_items_per_auction') ? document.getElementById('max_items_per_auction').value : 'alle';
+            var searchTerm = document.getElementById('search_term') ? document.getElementById('search_term').value : 'ingen';
+            var searchYear = document.getElementById('search_term_year') ? document.getElementById('search_term_year').value : 'ingen';
+
+            var loadingMessage = 
+                                "<br>" +
+                                "<div><strong>Scraperen jobber med å hente data for følgende parametre: </strong></div>" +
+                                "<br>" +
+                                "<div><strong>Antall auksjoner:</strong> " + auctions + "</div>" +
+                                "<div><strong>Antall objekter per auksjon:</strong> " + items + "</div>" +
+                                "<div><strong>Valgt ord i objekt-kolonnen:</strong> " + searchTerm + "</div>" +
+                                "<div><strong>Valgt år/ord i års-kolonnen:</strong> " + searchYear + "</div>";
+
+            var loadingMessageElement = document.getElementById('loadingMessage');
+            if (loadingMessageElement) {
+                loadingMessageElement.innerHTML = loadingMessage;
+                loadingMessageElement.style.display = 'block';
+            }
+
+            var submitButton = document.getElementById('submitButton');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            var stopButton = document.getElementById('stopButton');
+            if (stopButton) {
+                stopButton.style.display = 'block';
+            }
+        }
+
+        function disableLogButton() {
+            let logButton = document.getElementById("log-button");
+            let warningMessage = document.getElementById("warning-message");
+
+            if (logButton) {
+                logButton.style.pointerEvents = "none";  // Gjør knappen ukikkbar
+                logButton.style.opacity = "0.5";  // Visuelt deaktivert
+            }
+
+            if (warningMessage) {
+                warningMessage.style.display = "none";  // Skjuler advarsel til å begynne med
+            }
+        }
+    </script>
+
 </body>
 </html>

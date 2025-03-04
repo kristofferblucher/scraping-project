@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scraping Log</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            padding-top: 60px; /* Plass til fiksert tittel */
+        }
+
+        /* Tilbake-knappen øverst til venstre */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            left: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease-in-out;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Fiksert tittel uten container */
+        h1 {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            padding: 15px 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            background: none;
+            z-index: 999;
+        }
+
+        .log-container {
+    background: white;
+    padding: 20px;
+    padding-top: 40px; /* Økt padding for å unngå at toppen skjules */
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 800px;
+    height: 65vh; /* Justerbar høyde for scrolling */
+    overflow-y: auto;
+    text-align: left;
+    margin-top: 80px; /* Økt margin under tittelen */
+}
+
+
+        /* Styling for loggoppføringer */
+        .log-entry {
+            background: #eef2f3;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+            white-space: pre-line;
+            width: 100%;
+        }
+
+        .log-entry strong {
+            color: #007bff;
+        }
+
+        /* Tekst for tom logg */
+        .empty-log {
+            font-size: 18px;
+            color: #777;
+            font-style: italic;
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="/" class="back-button">⬅ Tilbake</a>
+
+    <h1>📜 Scraping Logg</h1>
+
+    <div class="log-container">
+        {% if log_entries and log_entries|length > 0 %}
+            {% for entry in log_entries %}
+                <div class="log-entry">
+                    {% set parts = entry.split(": ") %}
+                    <strong>Tidspunkt:</strong> {{ parts[0] }}<br>
+                    <strong>Detaljer:</strong><br>
+                    {% for param in parts[1].split(", ") %}
+                        &nbsp;&nbsp;&nbsp;&nbsp;• {{ param }}<br>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty-log">Scraping-loggen er tom</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>
