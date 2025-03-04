@@ -8,6 +8,7 @@ import pandas as pd
 import datetime
 import re
 import os
+import numpy as np
 
 app = Flask(__name__)
 
@@ -88,7 +89,14 @@ def get_auction_item_data(item_url):
     item_data['Type'] = keywords_meta['content'] if keywords_meta else ''
 
     item_data['Vinnerbud'] = soup.find('span', class_='NumberPart').text.strip().replace('\xa0', '') if soup.find('span', class_='NumberPart') else ''
-    item_data['Objekt nr'] = soup.find('strong').text.replace('Objektnr.', '').strip() if soup.find('strong') else ''
+
+    strong_tags = soup.find_all('strong')
+    for strong_tag in strong_tags:
+        if 'objekt' in strong_tag.text.lower():
+            item_data['Objekt nr'] = strong_tag.text.replace('Objektnr.', '').strip()
+            break  # Avslutter loopen når vi finner første match
+    
+    
     auction_info = soup.find('span', class_='h5').text.strip() if soup.find('span', class_='h5') else ''
     item_data['Auksjonshus + auksjonsnummer'] = auction_info
 
@@ -99,20 +107,16 @@ def get_auction_item_data(item_url):
         field_value = field.find('span', class_='detail__field-value').text.strip() if field.find('span', class_='detail__field-value') else ''
         if field_name and field_value:
             item_data[field_name] = field_value
-            print(f"Field Name: {field_name}, Field Value: {field_value}")
 
     # Calculate winning bid + premium (20% addition)
     if item_data['Vinnerbud']:
         try:
             vinnerbud = float(item_data['Vinnerbud'].replace('.', '').replace(',', '.'))
             item_data['Vinnerbud + salær'] = f"{vinnerbud * 1.2:,.2f}".replace(',', ' ').replace('.', ',')
-            print(f"Vinnerbud: {vinnerbud}, Vinnerbud + salær: {item_data['Vinnerbud + salær']}")
         except ValueError:
             item_data['Vinnerbud + salær'] = ''
     else:
         item_data['Vinnerbud + salær'] = ''
-
-    print(f"Hentet data for objekt: {item_data['Objekt']}")
 
     return item_data
 
@@ -125,10 +129,18 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import datetime
 
+# Finn mappen der denne .py-filen ligger
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Sett en variabel for mappen der Excel-filene skal ligge
+OUTPUT_DIR = os.path.join(BASE_DIR, "excel_exports")
+
+# Opprett mappen om den ikke finnes
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 
-def main(max_auctions=None, max_items_per_auction=None):
+def main(max_auctions=None, max_items_per_auction=None, search_term=None, search_term_year=None):
     base_url = 'https://auksjon.oslomyntgalleri.no/Events'
     page = 1
     all_auction_urls = []
@@ -136,7 +148,7 @@ def main(max_auctions=None, max_items_per_auction=None):
     while True:
         url = f"{base_url}?page={page}"
         new_urls = get_full_urls(url)
-        if not new_urls:  # Stopper hvis det ikke er flere URL-er å hente
+        if not new_urls:
             break
         all_auction_urls.extend(new_urls)
         if max_auctions is not None and len(all_auction_urls) >= max_auctions:
@@ -145,75 +157,113 @@ def main(max_auctions=None, max_items_per_auction=None):
         page += 1
 
     item_data_list = []
-    # Bruk ThreadPoolExecutor for å parallellisere datainnhenting
     with ThreadPoolExecutor(max_workers=10) as executor:
-        # Opprett en fremtidig til hver URL
-        future_to_url = {executor.submit(get_auction_item_data, item_url): item_url for auction_url in all_auction_urls for item_url in get_auction_item_urls(auction_url, max_items_per_auction)}
-        # Iterer gjennom fullførte futures og hent resultatene
+        future_to_url = {
+            executor.submit(get_auction_item_data, item_url): item_url
+            for auction_url in all_auction_urls
+            for item_url in get_auction_item_urls(auction_url, max_items_per_auction)
+        }
+
         for future in as_completed(future_to_url):
             item_data = future.result()
+            if search_term or search_term_year:
+                objekt_navn = item_data.get("Objekt", "").lower()
+                aar = item_data.get("År", "").lower()
+                if search_term and search_term.lower() not in objekt_navn:
+                    continue
+                if search_term_year and search_term_year.lower() not in aar:
+                    continue
+
             item_data_list.append(item_data)
-            print(f"Hentet data for: {item_data['Objekt']}")
+
+    # **Hvis ingen objekter matchet søket, returner en tom fil**
+    if not item_data_list:
+        print("⚠️ Ingen objekter matchet søket.")
+        return None
 
     df = pd.DataFrame(item_data_list)
 
-    # Spesifiser ønsket kolonnerekkefølge med "Vinnerbud + salær" rett etter "Vinnerbud"
     columns = [
         'Objekt', 'År', 'Vinnerbud', 'Vinnerbud + salær', 'Type', 'Objekt nr', 
         'Land', 'Utgave (for sedler), Pregested (for mynter)', 'Referanse', 
         'Referanse 2', 'Referanse 3', 'Referanse 4', 'Auksjonshus + auksjonsnummer', 
         'Info/kommentar/provinens', 'Proveniens', 'Konge'
     ]
-
-    # Behold kun de kolonnene som faktisk finnes i dataframen
     columns = [col for col in columns if col in df.columns]
-
     df = df[columns]
+
+    df = df.replace('', np.nan)
+    df = df.dropna(how='all', axis=0)
+    df.reset_index(drop=True, inplace=True)
+
+    
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S")
     filename = f"auksjonsdata_{timestamp}.xlsx"
     latest_filename = "auksjonsdata_latest.xlsx"
 
-    df.to_excel(filename, index=False)
-    print(f"Data eksportert til {filename}")
+    
+    full_path = os.path.join(OUTPUT_DIR, filename)
+    latest_path = os.path.join(OUTPUT_DIR, latest_filename)
 
-    shutil.copy(filename, latest_filename)
-    print(f"Siste versjon av filen lagret som {latest_filename}")
+    df.to_excel(full_path, index=False)
+    shutil.copy(full_path, latest_path)
 
-    return latest_filename
+    print(f"📁 Data eksportert til {filename}")
+    return latest_path
 
 
 
 
+#Flask Logikk: 
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        print("Received POST request")  # ✅ Debug print 1
+        print("Received POST request")  
         max_auctions = request.form.get('max_auctions')
         max_items_per_auction = request.form.get('max_items_per_auction')
+        search_term = request.form.get('search_term')
+        search_term_year = request.form.get('search_term_year')
+
+        print(f"Captured search_term: '{search_term}'")
+
         max_auctions = int(max_auctions) if max_auctions and max_auctions.isdigit() else None
         max_items_per_auction = int(max_items_per_auction) if max_items_per_auction and max_items_per_auction.isdigit() else None
+        search_term = search_term.strip().lower() if search_term else None
+        search_term_year = search_term_year.strip().lower() if search_term_year else None
+
         
         try:
-            print("Calling main()...")  # ✅ Debug print 2
-            file_path = main(max_auctions, max_items_per_auction)
-            print(f"File generated: {file_path}")  # ✅ Debug print 3
-            print("Rendering success.html...")  # ✅ Debug print 4
+            print("Calling main()...")  
+            file_path = main(max_auctions, max_items_per_auction, search_term, search_term_year)
+            print(f"File generated: {file_path}")  
+            print("Rendering success.html...")  
             return render_template('success.html', file_path=file_path)
         except Exception as e:
             print(f"Error in main(): {e}")
-            return str(e), 500  # Show the error in the browser
+            return str(e), 500  
 
     return render_template('index.html')
 
 
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 @app.route('/download-latest')
 def download_latest():
-    filename = "auksjonsdata_latest.xlsx"
-    if not os.path.exists(filename):
+    filename = 'auksjonsdata_latest.xlsx'
+    full_path = os.path.join(OUTPUT_DIR, filename)
+    if not os.path.exists(full_path):
         return "No file found. Please run the scraper first.", 404
-    return send_from_directory(directory='.', path=filename, as_attachment=True)
+
+    return send_from_directory(
+        directory=OUTPUT_DIR, 
+        path=filename, 
+        as_attachment=True
+    )
+
 
 @app.route('/view-latest-data')
 def view_latest_data():

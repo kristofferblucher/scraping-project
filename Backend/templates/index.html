@@ -7,15 +7,24 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h1>Velkommen til Auksjonsdata Viewer</h1>
-    
+    <h1>Auksjonsdata-Scraperen</h1>
+
+    <h2> Parametre: </h2>
     <!-- Skjema for å sende data -->
     <form action="/" method="post">
-        <label for="max_auctions">Maks auksjoner:</label>
+        <label for="max_auctions">Antall auksjoner (blank for alle):</label>
         <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
         
-        <label for="max_items_per_auction">Maks objekter per auksjon:</label>
+        <label for="max_items_per_auction">Antall objekter per auksjon (blank for alle):</label>
         <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
+
+        <label for="search_term">Filtrer etter ord i objekt-kolonnen (valgfritt):</label>
+        <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
+
+        <label for="search_term_year">Filtrer etter ord i års-kolonnen (valgfritt):</label>
+        <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
+
+        
         
         <button type="submit">Start Skraping</button>
     </form>

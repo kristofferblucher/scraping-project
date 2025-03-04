@@ -3,13 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <title>Scraping Completed</title>
+    <title>Skraping Fullført</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+            position: relative;
+        }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #333;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            color: #007bff;
+        }
+        .back-button i {
+            margin-right: 5px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        .container {
+            margin-top: 20px;
+            max-width: 500px;
+            padding: 50px;
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .icon {
+            font-size: 50px;
+            color: white;
+            background: #28a745;
+            border-radius: 50%;
+            padding: 10px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        h1 {
+            color: #333;
+            font-size: 22px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        p {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: block;
+            width: 90%;
+            padding: 12px;
+            margin-top: 20px;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease-in-out;
+            align-items: center;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn i {
+            margin-right: 8px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Scraping Completed!</h1>
-    <p>Your file has been generated and is ready for download.</p>
-    <a href="{{ url_for('download_latest') }}"><button>Download File</button></a>
-    <p><a href="/">Go back to Home</a></p>
+    <!-- Back Button in the Top Left Corner -->
+    <a href="/" class="back-button">
+        <i>⬅ Tilbake</i> 
+    </a>
+
+    <div class="container">
+        <div class="icon">✅</div>
+        <h1>Skraping fullført!</h1>
+        <p>Din fil er generert og klar for nedlasting.</p>
+        
+        <a href="{{ url_for('download_latest') }}" class="btn"><i>📥</i>Last ned fil</a>
+    </div>
 </body>
 </html>

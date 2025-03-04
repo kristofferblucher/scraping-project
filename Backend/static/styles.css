@@ -2,9 +2,23 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f4;
-    margin: 40px;
+    margin: 10px;
     padding: 20px;
     color: #333;
+}
+h1 {
+
+    margin-bottom: 60px;
+    font-size: 60px;
+    text-align: center;
+}
+
+h2 {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 30px;
+    text-align: left;
+
 }
 
 form {
@@ -12,6 +26,9 @@ form {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    
 }
 
 label {
@@ -20,7 +37,7 @@ label {
 }
 
 input[type="text"] {
-    width: calc(100% - 22px);
+    width: calc(20% - 22px);
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid #ccc;
@@ -39,8 +56,10 @@ button {
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 4px;
+    width: 15%;
 }
 
 button:hover {
     background-color: #0056b3;
 }
+
