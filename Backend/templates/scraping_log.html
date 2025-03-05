@@ -1,118 +1,204 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scraping Log</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
+        .log-page-container {
+            max-width: 1000px;
+            margin: 80px auto 40px;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .log-header {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .log-title {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--primary-color);
+            font-size: 1.8rem;
             margin: 0;
-            padding-top: 60px; /* Plass til fiksert tittel */
         }
 
-        /* Tilbake-knappen øverst til venstre */
-        .back-button {
-            position: fixed;
-            top: 15px;
-            left: 20px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
             text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background 0.3s ease-in-out;
-            text-align: center;
-            z-index: 1000;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 10px;
         }
 
-        .back-button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Fiksert tittel uten container */
-        h1 {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            text-align: center;
-            padding: 15px 0;
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-            background: none;
-            z-index: 999;
+        .back-btn:hover {
+            color: var(--secondary-color);
+            transform: translateX(-5px);
         }
 
         .log-container {
-    background: white;
-    padding: 20px;
-    padding-top: 40px; /* Økt padding for å unngå at toppen skjules */
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 80%;
-    max-width: 800px;
-    height: 65vh; /* Justerbar høyde for scrolling */
-    overflow-y: auto;
-    text-align: left;
-    margin-top: 80px; /* Økt margin under tittelen */
-}
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-height: 70vh;
+            overflow-y: auto;
+        }
 
-
-        /* Styling for loggoppføringer */
         .log-entry {
-            background: #eef2f3;
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--secondary-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .log-entry:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .log-timestamp {
+            color: var(--secondary-color);
+            font-weight: 500;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-timestamp i {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+
+        .log-details {
+            color: var(--text-color);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.95rem;
             padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-size: 14px;
-            white-space: pre-line;
-            width: 100%;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-family: monospace;
         }
 
-        .log-entry strong {
-            color: #007bff;
+        .log-details ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
-        /* Tekst for tom logg */
+        .log-details li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.95rem;
+        }
+
+        .log-details li::before {
+            content: "•";
+            color: var(--secondary-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+            line-height: 0;
+        }
+
         .empty-log {
-            font-size: 18px;
-            color: #777;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-color);
             font-style: italic;
+            font-size: 1.1rem;
         }
 
+        /* Scrollbar styling */
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 4px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #2980b9;
+        }
+
+        @media (max-width: 768px) {
+            .log-page-container {
+                margin: 60px 20px 20px;
+            }
+
+            .log-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .log-container {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="log-page-container">
+        <div class="log-header">
+            <a href="/" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Tilbake
+            </a>
+            <h1 class="log-title">
+                <i class="fas fa-history"></i> Scraping Logg
+            </h1>
+        </div>
 
-    <a href="/" class="back-button">⬅ Tilbake</a>
-
-    <h1>📜 Scraping Logg</h1>
-
-    <div class="log-container">
-        {% if log_entries and log_entries|length > 0 %}
-            {% for entry in log_entries %}
-                <div class="log-entry">
-                    {% set parts = entry.split(": ") %}
-                    <strong>Tidspunkt:</strong> {{ parts[0] }}<br>
-                    <strong>Detaljer:</strong><br>
-                    {% for param in parts[1].split(", ") %}
-                        &nbsp;&nbsp;&nbsp;&nbsp;• {{ param }}<br>
-                    {% endfor %}
+        <div class="log-container">
+            {% if log_entries and log_entries|length > 0 %}
+                {% for entry in log_entries|reverse %}
+                    <div class="log-entry">
+                        {% set parts = entry.split(": ", 1) %}
+                        <div class="log-timestamp">
+                            <i class="fas fa-clock"></i> {{ parts[0] }}
+                        </div>
+                        <div class="log-details">{{ parts[1] if parts|length > 1 else entry }}</div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-log">
+                    <i class="fas fa-info-circle"></i> Scraping-loggen er tom
                 </div>
-            {% endfor %}
-        {% else %}
-            <p class="empty-log">Scraping-loggen er tom</p>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
-
 </body>
 </html>

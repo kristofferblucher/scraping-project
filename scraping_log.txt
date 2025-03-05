@@ -1,0 +1,48 @@
+2025-03-05T15:01:24.434482: Scraping stoppet manuelt av bruker
+2025-03-05T15:05:45.427907: Scraping stoppet manuelt av bruker
+2025-03-05T15:06:05.774686: Scraping stoppet manuelt av bruker
+2025-03-05T15:06:14.924639: Scraping stoppet manuelt av bruker
+2025-03-05T15:06:40.947532: Scraping stoppet manuelt av bruker
+2025-03-05T15:08:50.378423: Scraping fullført
+• Antall auksjoner: 10
+• Antall objekter per auksjon: 2
+• Søkeord: None
+• Årstall: None
+• Egendefinert filnavn: None
+• Generert fil: auksjonsdata_2025-03-05 15-08-50.xlsx
+2025-03-05T15:10:31.127191: Scraping stoppet manuelt av bruker
+2025-03-05T15:14:21.851251: Scraping stoppet manuelt av bruker
+2025-03-05T15:14:43.027446: Scraping stoppet manuelt av bruker
+2025-03-05T15:14:45.585748: Scraping stoppet manuelt av bruker
+2025-03-05T15:17:28.756949: Scraping fullført
+• Antall auksjoner: 10
+• Antall objekter per auksjon: 2
+• Søkeord: None
+• Årstall: None
+• Egendefinert filnavn: None
+• Generert fil: auksjonsdata_2025-03-05 15-17-28.xlsx
+2025-03-05T15:28:16.867126: Scraping fullført
+• Antall auksjoner: alle
+• Auksjonsnavn: Auksjon 33 og 34
+• Antall objekter per auksjon: 20
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 15-28-16.xlsx
+2025-03-05T15:35:18.158334: Scraping stoppet manuelt av bruker
+2025-03-05T15:38:26.283932: Scraping fullført
+• Antall auksjoner: alle
+• Auksjonsnavn: Auksjon 33 og 34
+• Antall objekter per auksjon: 20
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 15-38-25.xlsx
+2025-03-05T15:40:04.037412: Scraping fullført
+• Antall auksjoner: alle
+• Auksjonsnavn: Auksjon 33 og 34
+• Antall objekter per auksjon: 20
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 15-40-04.xlsx

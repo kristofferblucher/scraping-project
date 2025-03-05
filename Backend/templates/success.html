@@ -1,102 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skraping Fullført</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-            position: relative;
-        }
-        .back-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-            color: #333;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-        }
-        .back-button:hover {
-            color: #007bff;
-        }
-        .back-button i {
-            margin-right: 5px;
-            font-size: 30px;
-            font-weight: bold;
-        }
-        .container {
-            margin-top: 20px;
-            max-width: 500px;
-            padding: 50px;
-            text-align: center;
+        .success-container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 40px;
             background: white;
-            border-radius: 10px;
-            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            text-align: center;
         }
-        .icon {
-            font-size: 50px;
-            color: white;
-            background: #28a745;
-            border-radius: 50%;
-            padding: 10px;
-            display: inline-block;
-            margin-bottom: 15px;
+
+        .success-icon {
+            font-size: 3rem;
+            color: #2ecc71;
+            margin-bottom: 20px;
+            animation: bounce 1s ease infinite;
         }
-        h1 {
-            color: #333;
-            font-size: 22px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        p {
-            font-size: 16px;
-            color: #666;
+
+        .success-title {
+            color: var(--primary-color);
+            font-size: 2rem;
             margin-bottom: 20px;
         }
-        .btn {
-            display: block;
-            width: 90%;
-            padding: 12px;
-            margin-top: 20px;
-            text-align: center;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: background 0.3s ease-in-out;
+
+        .success-message {
+            color: var(--text-color);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .file-name {
+            color: var(--text-color);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+
+        .download-btn {
+            display: inline-flex;
             align-items: center;
+            gap: 10px;
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 15px 30px;
+            border-radius: var(--border-radius);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-        .btn:hover {
-            background-color: #0056b3;
+
+        .download-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .btn i {
-            margin-right: 8px;
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            color: var(--secondary-color);
+            transform: translateX(-5px);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @media (max-width: 768px) {
+            .success-container {
+                margin: 80px 20px;
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Back Button in the Top Left Corner -->
-    <a href="/" class="back-button">
-        <i>⬅ Tilbake</i> 
+    <a href="/" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Tilbake
     </a>
 
-    <div class="container">
-        <div class="icon">✅</div>
-        <h1>Scraping fullført!</h1>
-        <p>Din fil er generert og klar for nedlasting.</p>
+    <div class="success-container">
+        <div class="success-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h1 class="success-title">Scraping fullført!</h1>
+        <p class="success-message">Din fil er generert og klar for nedlasting.</p>
+        <p class="file-name">Filnavn: {{ download_filename }}</p>
         
-        <a href="{{ url_for('download_latest') }}" class="btn"><i>📥</i>Last ned fil</a>
+        <a href="{{ url_for('download_latest', filename=download_filename) }}" class="download-btn">
+            <i class="fas fa-download"></i> Last ned fil
+        </a>
     </div>
 </body>
 </html>

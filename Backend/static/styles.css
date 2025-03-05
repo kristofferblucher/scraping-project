@@ -1,138 +1,217 @@
-/* styles.css */
+/* Modern styling */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --background-color: #ecf0f1;
+    --text-color: #2c3e50;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    margin: 10px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--background-color);
+    margin: 0;
     padding: 20px;
-    color: #333;
+    color: var(--text-color);
+    line-height: 1.6;
 }
 
 h1 {
-    margin-bottom: 60px;
-    font-size: 60px;
+    margin-bottom: 40px;
+    font-size: 2.5rem;
     text-align: center;
+    color: var(--primary-color);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
-    margin-top: 20px;
+    margin-top: 30px;
     margin-bottom: 20px;
-    font-size: 30px;
-    text-align: left;
+    font-size: 1.8rem;
+    color: var(--primary-color);
+}
+
+.content-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.form-container {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
 }
 
 form {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
+    gap: 15px;
 }
 
 label {
-    margin-bottom: 10px;
-    display: block;
+    font-weight: 500;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.form-group {
+    margin-bottom: 0;
 }
 
 input[type="text"] {
-    width: calc(30% - 22px); /* Justert bredde for full bredde innenfor skjema */
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    width: 95%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 button {
-    background-color: #007BFF;
+    background-color: var(--secondary-color);
     color: white;
     border: none;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    margin-left: 100px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius);
     cursor: pointer;
-    border-radius: 4px;
-    width: 15%; /* Auto width for bedre kontroll på plassering og størrelse */
-    place-items: center; /* Sentrerer knappen */
+    transition: all 0.3s ease;
+    width: auto;
+    margin: 10px 0;
 }
 
 button:hover {
-    background-color: #0056b3;
-}
-
-.loading-container {
-    width: 40%; /* Justert bredde for visning ved siden av skjema */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column; /* Elementer stablet vertikalt */
-
-    margin-left: 600px;
-}
-
-#loadingMessage {
-    display: none;
-    font-size: 25px;
-    color: black; /* Justert for bedre synlighet */
-    text-align: left; /* Sentrerer teksten */
-
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 #stopButton {
-    display: none;
-    color: white;
-    background-color: red;
-    padding: 10px 20px;
-    border-radius: 4px;
-    margin-top: 20px; /* Ekstra margin for å separere fra startknappen */
+    background-color: var(--accent-color);
+}
+
+#stopButton:hover {
+    background-color: #c0392b;
 }
 
 .btn {
     display: inline-block;
-    padding: 10px 20px;
-    background-color: #007bff; /* Blå bakgrunn */
+    padding: 12px 24px;
+    background-color: var(--secondary-color);
     color: white;
-    text-decoration: none; /* Fjerner understrek */
-    border-radius: 5px; /* Runde hjørner */
-    font-weight: bold;
-    font-size: 16px;
-    text-align: center;
-    transition: background 0.3s ease-in-out;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
     border: none;
     cursor: pointer;
 }
 
 .btn:hover {
-    background-color: #0056b3; /* Mørkere blå ved hover */
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-
-
-/* Sentral spinner */
-.spinner-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10; /* Sikrer at spinneren ligger over innholdet */
-    display: none;
+.loading-container {
+    background: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
 }
 
-.spinner {
-    border: 6px solid #f3f3f3;
-    border-top: 6px solid #007bff; /* Blå farge på toppdelen */
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
+#loadingMessage {
+    font-size: 1.1rem;
+    color: var(--text-color);
 }
 
-/* Spinner-animasjon */
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.status-info {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin: 15px 0;
 }
 
+.status-info h3 {
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.status-info li {
+    margin: 10px 0;
+    padding: 8px;
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.status-info li strong {
+    color: var(--primary-color);
+}
+
+.fa-spin {
+    color: var(--secondary-color);
+}
+
+input::placeholder {
+    color: #95a5a6;
+    opacity: 0.8;
+}
+
+.form-hint {
+    display: block;
+    color: #7f8c8d;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .content-container {
+        grid-template-columns: 1fr;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+    
+    .form-container, .loading-container {
+        padding: 20px;
+    }
+}
+
+/* Warning message styling */
+#warning-message {
+    color: var(--accent-color);
+    background-color: #fde8e8;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    margin: 10px 0;
+    text-align: center;
+    font-weight: 500;
+}

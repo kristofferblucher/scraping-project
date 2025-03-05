@@ -1,59 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="no" data-scraping-active="{{ scraping_active | default(false) | tojson }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Auksjonsdata Håndtering</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            flex: 0 0 auto;
+            min-width: 150px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        #submitButton {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        #submitButton:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .stop-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .stop-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        #submitButton:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1><i class="fas fa-coins"></i> Auksjonsdata-Scraperen</h1>
 
-    <h1>Auksjonsdata-Scraperen 🪙 </h1>
+        <div class="content-container">
+            <div class="form-container">
+                <h2><i class="fas fa-cog"></i> Innstillinger</h2>
+                <form action="/" method="post" onsubmit="showLoading()">
+                    <div class="form-group">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <label for="max_auctions">
+                                <i class="fas fa-list"></i> <span id="auction-field-label">Antall auksjoner</span>
+                            </label>
+                            <button type="button" onclick="toggleAuctionInput()" class="btn btn-sm" style="padding: 5px 10px; font-size: 0.8em;">
+                                <i class="fas fa-exchange-alt"></i> Bytt til <span id="toggle-text">auksjonsnavn</span>
+                            </button>
+                        </div>
+                        <input type="text" id="max_auctions" name="max_auctions" placeholder="La stå tomt for alle auksjoner" data-mode="number">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="max_items_per_auction">
+                            <i class="fas fa-box"></i> Antall objekter per auksjon
+                        </label>
+                        <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="La stå tomt for alle objekter">
+                    </div>
+          
+                    <div class="form-group">
+                        <label for="search_term">
+                            <i class="fas fa-search"></i> Søk i objekt-kolonnen
+                        </label>
+                        <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
+                    </div>
+          
+                    <div class="form-group">
+                        <label for="search_term_year">
+                            <i class="fas fa-calendar"></i> Søk i års-kolonnen
+                        </label>
+                        <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
+                    </div>
+          
+                    <div class="form-group">
+                        <label for="custom_filename">
+                            <i class="fas fa-file-excel"></i> Egendefinert filnavn (valgfritt)
+                        </label>
+                        <input type="text" id="custom_filename" name="custom_filename" placeholder="La stå tomt for automatisk generert navn">
+                        <small class="form-hint">Filendelsen .xlsx legges til automatisk</small>
+                    </div>
+          
+                    <div class="button-group">
+                        <button type="submit" id="submitButton" class="action-btn">
+                            <i class="fas fa-play"></i> Start Skraping
+                        </button>
+                        <button type="submit" id="stopButton" formaction="/stop" class="action-btn stop-btn" style="display:none;">
+                            <i class="fas fa-stop"></i> Stopp Scraping
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-    <!-- Scraping-logg-knapp (Deaktiveres når scraping starter) -->
-    <div style="margin-top: 20px; text-align: center;">
-        <a href="/scraping-log" class="btn" id="log-button">Scraping-logg</a>
-        <p id="warning-message" style="color: red; display: none;">⚠️ Stopp scraperen før du ser loggen.</p>
-    </div>
-
-    <h2> Parametre: </h2>
-    <div class="content-container">
-
-                <!-- Lastesymbol (spinner) -->
-                <div id="loadingSpinner" class="spinner-overlay" style="display: none;">
-                    <div class="spinner"></div>
+            <div class="loading-container">
+                <h2><i class="fas fa-info-circle"></i> Status</h2>
+                <div id="loadingMessage" style="display:none;"></div>
+                <div id="warning-message" style="display: none;">
+                    <i class="fas fa-exclamation-triangle"></i> Stopp scraperen før du ser loggen.
                 </div>
-        
-        <!-- Skjema-seksjon -->
-        <div class="form-container">
-            <form action="/" method="post" onsubmit="showLoading()">
-                <label for="max_auctions">Antall auksjoner (blank for alle):</label>
-                <input type="text" id="max_auctions" name="max_auctions" placeholder="Antall auksjoner">
-                
-                <label for="max_items_per_auction">Antall objekter per auksjon (blank for alle):</label>
-                <input type="text" id="max_items_per_auction" name="max_items_per_auction" placeholder="Antall objekter per auksjon">
-          
-                <label for="search_term">Filtrer etter ord i objekt-kolonnen (valgfritt):</label>
-                <input type="text" id="search_term" name="search_term" placeholder="F.eks. speciedaler">
-          
-                <label for="search_term_year">Filtrer etter ord i års-kolonnen (valgfritt):</label>
-                <input type="text" id="search_term_year" name="search_term_year" placeholder="F.eks. 1980">
-          
-                <button type="submit" id="submitButton">Start Skraping</button>
-                <button type="submit" id="stopButton" formaction="/stop" style="display:none;">Stopp Scraping</button>
-            </form>
-        </div>
-
-        
-        
-        <!-- Loading-melding-seksjon -->
-        <div class="loading-container">
-            <div id="loadingMessage" style="display:none;"></div>
+                <a href="/scraping-log" class="btn" id="log-button">
+                    <i class="fas fa-history"></i> Vis Scraping-logg
+                </a>
+            </div>
         </div>
     </div>
 
     <script>
-        let scrapingActive = {{ scraping_active | default(false) | tojson }};
+        const scrapingActive = JSON.parse(document.documentElement.getAttribute('data-scraping-active') || 'false');
 
         document.addEventListener("DOMContentLoaded", function() {
             let logButton = document.getElementById("log-button");
@@ -61,55 +146,56 @@
             let stopButton = document.getElementById("stopButton");
 
             if (stopButton) {
-                stopButton.style.display = 'none';  // Skjuler stoppknappen ved innlasting
+                stopButton.style.display = 'none';
             }
 
             if (scrapingActive) {
-                disableLogButton(); // Sørger for at knappen er deaktivert ved sidenavigering
+                disableLogButton();
             }
 
             logButton.addEventListener("click", function(event) {
                 if (scrapingActive) {
-                    event.preventDefault();  // Stopper lenken fra å åpne
-                    warningMessage.style.display = "block";  // Viser advarsel
+                    event.preventDefault();
+                    warningMessage.style.display = "block";
                 }
             });
         });
 
         function showLoading() {
-            disableLogButton(); // Deaktiver knappen umiddelbart ved start
+            const submitButton = document.getElementById('submitButton');
+            const stopButton = document.getElementById('stopButton');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const input = document.getElementById('max_auctions');
+            
+            // Disable submit button and show stop button
+            if (submitButton) submitButton.disabled = true;
+            if (stopButton) stopButton.style.display = 'block';
+            
+            // Show initial status message
+            var auctionValue = input.value || 'alle';
+            var auctionText = input.dataset.mode === 'name' ? 
+                `<li><strong>Søker etter auksjon:</strong> ${auctionValue}</li>` :
+                `<li><strong>Antall auksjoner:</strong> ${auctionValue}</li>`;
+            
+            var items = document.getElementById('max_items_per_auction').value || 'alle';
+            var searchTerm = document.getElementById('search_term').value || 'ingen';
+            var searchYear = document.getElementById('search_term_year').value || 'ingen';
 
-            document.getElementById("loadingSpinner").style.display = "block";
-
-            var auctions = document.getElementById('max_auctions') ? document.getElementById('max_auctions').value : 'alle';
-            var items = document.getElementById('max_items_per_auction') ? document.getElementById('max_items_per_auction').value : 'alle';
-            var searchTerm = document.getElementById('search_term') ? document.getElementById('search_term').value : 'ingen';
-            var searchYear = document.getElementById('search_term_year') ? document.getElementById('search_term_year').value : 'ingen';
-
-            var loadingMessage = 
-                                "<br>" +
-                                "<div><strong>Scraperen jobber med å hente data for følgende parametre: </strong></div>" +
-                                "<br>" +
-                                "<div><strong>Antall auksjoner:</strong> " + auctions + "</div>" +
-                                "<div><strong>Antall objekter per auksjon:</strong> " + items + "</div>" +
-                                "<div><strong>Valgt ord i objekt-kolonnen:</strong> " + searchTerm + "</div>" +
-                                "<div><strong>Valgt år/ord i års-kolonnen:</strong> " + searchYear + "</div>";
-
-            var loadingMessageElement = document.getElementById('loadingMessage');
-            if (loadingMessageElement) {
-                loadingMessageElement.innerHTML = loadingMessage;
-                loadingMessageElement.style.display = 'block';
+            if (loadingMessage) {
+                loadingMessage.innerHTML = "<div class='status-info'>" +
+                    "<h3><i class='fas fa-cog fa-spin'></i> Scraperen jobber med følgende innstillinger:</h3>" +
+                    "<ul>" +
+                    auctionText +
+                    "<li><strong>Antall objekter per auksjon:</strong> " + items + "</li>" +
+                    "<li><strong>Søk i objekt-kolonnen:</strong> " + searchTerm + "</li>" +
+                    "<li><strong>Søk i års-kolonnen:</strong> " + searchYear + "</li>" +
+                    "</ul>" +
+                    "</div>";
+                loadingMessage.style.display = 'block';
             }
-
-            var submitButton = document.getElementById('submitButton');
-            if (submitButton) {
-                submitButton.disabled = true;
-            }
-
-            var stopButton = document.getElementById('stopButton');
-            if (stopButton) {
-                stopButton.style.display = 'block';
-            }
+            
+            disableLogButton();
+            return true;
         }
 
         function disableLogButton() {
@@ -117,15 +203,36 @@
             let warningMessage = document.getElementById("warning-message");
 
             if (logButton) {
-                logButton.style.pointerEvents = "none";  // Gjør knappen ukikkbar
-                logButton.style.opacity = "0.5";  // Visuelt deaktivert
+                logButton.style.pointerEvents = "none";
+                logButton.style.opacity = "0.5";
             }
 
             if (warningMessage) {
-                warningMessage.style.display = "none";  // Skjuler advarsel til å begynne med
+                warningMessage.style.display = "none";
+            }
+        }
+
+        function toggleAuctionInput() {
+            const input = document.getElementById('max_auctions');
+            const label = document.getElementById('auction-field-label');
+            const toggleText = document.getElementById('toggle-text');
+            
+            if (input.dataset.mode === 'number') {
+                // Bytt til auksjonsnavn-modus
+                input.dataset.mode = 'name';
+                input.placeholder = 'Skriv inn navn på auksjonen';
+                input.value = '';
+                label.textContent = 'Søk etter auksjonsnavn';
+                toggleText.textContent = 'antall';
+            } else {
+                // Bytt til antall-modus
+                input.dataset.mode = 'number';
+                input.placeholder = 'La stå tomt for alle auksjoner';
+                input.value = '';
+                label.textContent = 'Antall auksjoner';
+                toggleText.textContent = 'auksjonsnavn';
             }
         }
     </script>
-
 </body>
 </html>
