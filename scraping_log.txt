@@ -1,0 +1,32 @@
+2025-03-05T21:21:12.357582: Scraping fullført
+• Antall auksjoner: 1
+• Auksjonsnavn: ikke spesifisert
+• Antall objekter per auksjon: 5
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 21-21-12.xlsx
+2025-03-05T21:22:17.157889: Scraping fullført
+• Antall auksjoner: 1
+• Auksjonsnavn: ikke spesifisert
+• Antall objekter per auksjon: 5
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 21-22-17.xlsx
+2025-03-05T21:22:58.303104: Scraping fullført
+• Antall auksjoner: 1
+• Auksjonsnavn: ikke spesifisert
+• Antall objekter per auksjon: 5
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 21-22-58.xlsx
+2025-03-05T21:24:06.746533: Scraping fullført
+• Antall auksjoner: 1
+• Auksjonsnavn: ikke spesifisert
+• Antall objekter per auksjon: 5
+• Søkeord: ingen
+• Årstall: ingen
+• Egendefinert filnavn: automatisk generert
+• Generert fil: auksjonsdata_2025-03-05 21-24-06.xlsx

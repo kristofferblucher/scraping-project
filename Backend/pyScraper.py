@@ -177,6 +177,8 @@ def get_auction_item_data(item_url):
         field_name = field.find('span', class_='detail__field-name').text.strip().replace(':', '') if field.find('span', class_='detail__field-name') else ''
         field_value = field.find('span', class_='detail__field-value').text.strip() if field.find('span', class_='detail__field-value') else ''
         if field_name and field_value:
+            # Fjern eventuelle mellomrom i feltnavnet
+            field_name = field_name.strip()
             item_data[field_name] = field_value
 
     # Calculate winning bid + premium (20% addition)
@@ -301,12 +303,18 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
         
         df = pd.DataFrame(item_data_list)
 
+        # Sikre at alle ønskede kolonner eksisterer
+        for col in ['Objekt', 'År', 'Kvalitet']:
+            if col not in df.columns:
+                df[col] = ''
+
         columns = [
-            'Objekt', 'År', 'Vinnerbud', 'Vinnerbud + salær', 'Type', 'Objekt nr', 
+            'Objekt', 'År', 'Kvalitet', 'Vinnerbud', 'Vinnerbud + salær', 'Type', 'Objekt nr', 
             'Land', 'Utgave (for sedler), Pregested (for mynter)', 'Referanse', 
             'Referanse 2', 'Referanse 3', 'Referanse 4', 'Auksjonshus + auksjonsnummer', 
             'Info/kommentar/provinens', 'Proveniens', 'Konge'
         ]
+        # Filtrer kolonner som faktisk finnes i dataframen
         columns = [col for col in columns if col in df.columns]
         df = df[columns]
 
