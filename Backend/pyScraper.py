@@ -1,6 +1,6 @@
 import shutil
 from threading import Event
-from flask import Flask, request, send_from_directory, render_template_string, render_template, jsonify
+from flask import Flask, request, send_from_directory, render_template_string, render_template, jsonify, flash, redirect, url_for
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
@@ -13,6 +13,7 @@ import numpy as np
 
 
 app = Flask(__name__)
+app.secret_key = '1886Arsenal'  # Dette er en tilfeldig streng som brukes for å sikre session data
 stop_event = Event()
 scraping_active = False
 
@@ -57,6 +58,15 @@ def get_auction_item_urls(auction_url, max_items_per_auction=None):
     """Henter alle objekt-URLer fra alle sider av en spesifikk auksjonsside."""
     item_urls = []
     current_page = 0
+    
+    # Konverter max_items_per_auction til int hvis det er en streng
+    if isinstance(max_items_per_auction, str):
+        try:
+            max_items_per_auction = int(max_items_per_auction)
+        except ValueError:
+            print(f"Ugyldig verdi for max_items_per_auction: {max_items_per_auction}")
+            max_items_per_auction = None
+    
     while auction_url:
         if stop_event.is_set():
             return None
@@ -221,6 +231,14 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
     try:
         print("Starting scraping process...")
         
+        # Konverter max_auctions til int hvis det er en streng
+        if isinstance(max_auctions, str):
+            try:
+                max_auctions = int(max_auctions)
+            except ValueError:
+                print(f"Ugyldig verdi for max_auctions: {max_auctions}")
+                max_auctions = None
+        
         if stop_event.is_set():
             raise Exception("Scraping was stopped")
 
@@ -247,7 +265,7 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
             page += 1
 
         if not all_auction_urls:
-            raise Exception("No auctions found")
+            raise Exception("Ingen auksjoner matchet søket")
 
         if stop_event.is_set():
             raise Exception("Scraping was stopped")
@@ -277,7 +295,7 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
                         item_data_list.append(item_data)
 
         if not item_data_list:
-            raise Exception("No matching items found")
+            raise Exception("Ingen objekter matchet søkekriteriene")
         
         print("\nProcessing complete. Creating Excel file...")
         
@@ -328,7 +346,7 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
         scraping_active = False
 
 def log_user_activity(activity):
-    with open('scraping_log.txt', 'a') as file:
+    with open('scraping_log.txt', 'a', encoding='utf-8') as file:
         timestamp = datetime.datetime.now().isoformat()
         file.write(f"{timestamp}: {activity}\n")
 
@@ -338,27 +356,36 @@ def index():
 
     if request.method == 'POST':
         if scraping_active:
-            return "Scraping is already in progress. Please wait or stop the current process.", 400
+            flash('Scraping pågår allerede. Vennligst vent eller stopp den nåværende prosessen.', 'error')
+            return render_template('index.html', scraping_active=scraping_active)
         
         print("Received POST request")
         
         try:
             # Hent form data
             max_auctions_input = request.form.get('max_auctions', '').strip()
+            input_mode = request.form.get('input_mode', 'number').strip()
             max_items_per_auction = request.form.get('max_items_per_auction', '').strip()
             search_term = request.form.get('search_term', '').strip()
             search_term_year = request.form.get('search_term_year', '').strip()
             custom_filename = request.form.get('custom_filename', '').strip()
 
-            # Sjekk om max_auctions er et tall eller auksjonsnavn
+            # Sjekk om max_auctions er et tall eller auksjonsnavn basert på input_mode
             auction_name = None
             max_auctions = None
             
             if max_auctions_input:
-                try:
-                    max_auctions = int(max_auctions_input)
-                    auction_name = None
-                except ValueError:
+                if input_mode == 'number':
+                    try:
+                        max_auctions = int(max_auctions_input)
+                        if max_auctions <= 0:
+                            flash('Antall auksjoner må være et positivt tall.', 'error')
+                            return render_template('index.html', scraping_active=scraping_active)
+                        auction_name = None
+                    except ValueError:
+                        flash('Vennligst skriv inn et gyldig tall for antall auksjoner.', 'error')
+                        return render_template('index.html', scraping_active=scraping_active)
+                else:  # input_mode == 'name'
                     auction_name = max_auctions_input
                     max_auctions = None
 
@@ -366,8 +393,12 @@ def index():
             if max_items_per_auction:
                 try:
                     max_items_per_auction = int(max_items_per_auction)
+                    if max_items_per_auction <= 0:
+                        flash('Antall objekter per auksjon må være et positivt tall.', 'error')
+                        return render_template('index.html', scraping_active=scraping_active)
                 except ValueError:
-                    raise ValueError("Antall objekter per auksjon må være et tall.")
+                    flash('Antall objekter per auksjon må være et tall.', 'error')
+                    return render_template('index.html', scraping_active=scraping_active)
 
             print(f"Processed inputs: max_auctions={max_auctions}, auction_name={auction_name}, max_items={max_items_per_auction}")
             
@@ -383,7 +414,8 @@ def index():
             
             if not result:
                 scraping_active = False
-                raise Exception("Ingen resultater funnet")
+                flash('Ingen resultater funnet.', 'error')
+                return render_template('index.html', scraping_active=scraping_active)
             
             print(f"File generated: {result['path']}")
             
@@ -404,13 +436,11 @@ def index():
                                 download_filename=result['download_filename'],
                                 scraping_active=False)
                 
-        except ValueError as ve:
-            scraping_active = False
-            return str(ve), 400
         except Exception as e:
-            print(f"Error in main(): {e}")
+            print(f"Error in main(): {str(e)}")
             scraping_active = False
-            return str(e), 500
+            flash(str(e), 'error')
+            return render_template('index.html', scraping_active=scraping_active)
 
     return render_template('index.html', scraping_active=scraping_active)
 
@@ -425,7 +455,7 @@ def stop_scraping():
     activity = "Scraping stoppet manuelt av bruker"
     log_user_activity(activity)
     
-    return render_template('index.html', message="Scraping has been stopped.", scraping_active=scraping_active)
+    return render_template('index.html', scraping_active=scraping_active)
 
 @app.route('/scraping-log')
 def view_scraping_log():
@@ -435,24 +465,42 @@ def view_scraping_log():
     if not os.path.exists(log_file):
         log_entries = []  # Hvis filen ikke finnes, bruk en tom liste
     else:
-        with open(log_file, 'r') as file:
-            content = file.read()
-            # Del innholdet på ISO timestamp-mønsteret (YYYY-MM-DD...)
-            import re
-            log_entries = []
-            # Finn alle timestamps i filen
-            timestamps = re.finditer(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+', content)
-            # Konverter iterator til liste av start-posisjoner
-            positions = [m.start() for m in timestamps]
-            
-            # Behandle hver loggoppføring
-            for i in range(len(positions)):
-                start = positions[i]
-                # Hvis dette er siste oppføring, bruk resten av filen
-                end = positions[i + 1] if i < len(positions) - 1 else len(content)
-                entry = content[start:end].strip()
-                if entry:  # Legg bare til hvis oppføringen ikke er tom
-                    log_entries.append(entry)
+        try:
+            with open(log_file, 'r', encoding='utf-8') as file:
+                content = file.read()
+                # Del innholdet på ISO timestamp-mønsteret (YYYY-MM-DD...)
+                import re
+                log_entries = []
+                # Finn alle timestamps i filen
+                timestamps = re.finditer(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+', content)
+                # Konverter iterator til liste av start-posisjoner
+                positions = [m.start() for m in timestamps]
+                
+                # Behandle hver loggoppføring
+                for i in range(len(positions)):
+                    start = positions[i]
+                    # Hvis dette er siste oppføring, bruk resten av filen
+                    end = positions[i + 1] if i < len(positions) - 1 else len(content)
+                    entry = content[start:end].strip()
+                    if entry:  # Legg bare til hvis oppføringen ikke er tom
+                        log_entries.append(entry)
+        except UnicodeDecodeError:
+            # Hvis filen allerede inneholder data med feil encoding, prøv å lese den med 'latin-1'
+            with open(log_file, 'r', encoding='latin-1') as file:
+                content = file.read()
+                # Konverter innholdet til UTF-8 og skriv det tilbake
+                with open(log_file, 'w', encoding='utf-8') as outfile:
+                    outfile.write(content)
+                # Del opp innholdet som før
+                log_entries = []
+                timestamps = re.finditer(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+', content)
+                positions = [m.start() for m in timestamps]
+                for i in range(len(positions)):
+                    start = positions[i]
+                    end = positions[i + 1] if i < len(positions) - 1 else len(content)
+                    entry = content[start:end].strip()
+                    if entry:
+                        log_entries.append(entry)
 
     return render_template('scraping_log.html', log_entries=log_entries)
 

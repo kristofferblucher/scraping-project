@@ -62,11 +62,55 @@
             padding: 15px;
             margin: 15px 0;
         }
+
+        .flash-messages {
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .flash-message {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: var(--border-radius);
+            background-color: #f8f9fa;
+            border-left: 4px solid;
+            transition: opacity 1s ease-out;
+        }
+
+        .flash-message.error {
+            background-color: #fee2e2;
+            border-left-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .flash-message.success {
+            background-color: #dcfce7;
+            border-left-color: #22c55e;
+            color: #166534;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1><i class="fas fa-coins"></i> Auksjonsdata-Scraperen</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash-message {{ category }}">
+                        {% if category == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle"></i>
+                        {% endif %}
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
 
         <div class="content-container">
             <div class="form-container">
@@ -82,6 +126,7 @@
                             </button>
                         </div>
                         <input type="text" id="max_auctions" name="max_auctions" placeholder="La stå tomt for alle auksjoner" data-mode="number">
+                        <input type="hidden" id="input_mode" name="input_mode" value="number">
                     </div>
                     
                     <div class="form-group">
@@ -159,6 +204,17 @@
                     warningMessage.style.display = "block";
                 }
             });
+
+            // Funksjon for å håndtere flash-meldinger
+            let flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 1000); // Fjern elementet etter fade-out animasjonen
+                }, 5000); // 5 sekunder istedenfor 10
+            });
         });
 
         function showLoading() {
@@ -216,10 +272,12 @@
             const input = document.getElementById('max_auctions');
             const label = document.getElementById('auction-field-label');
             const toggleText = document.getElementById('toggle-text');
+            const inputMode = document.getElementById('input_mode');
             
             if (input.dataset.mode === 'number') {
                 // Bytt til auksjonsnavn-modus
                 input.dataset.mode = 'name';
+                inputMode.value = 'name';
                 input.placeholder = 'Skriv inn navn på auksjonen';
                 input.value = '';
                 label.textContent = 'Søk etter auksjonsnavn';
@@ -227,6 +285,7 @@
             } else {
                 // Bytt til antall-modus
                 input.dataset.mode = 'number';
+                inputMode.value = 'number';
                 input.placeholder = 'La stå tomt for alle auksjoner';
                 input.value = '';
                 label.textContent = 'Antall auksjoner';
