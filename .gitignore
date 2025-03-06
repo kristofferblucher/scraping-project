@@ -1,0 +1,5 @@
+ __pycache__/
+*.pyc
+excel_exports/
+scraping_log.txt
+.env
