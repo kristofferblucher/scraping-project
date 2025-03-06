@@ -118,15 +118,21 @@
                 <form action="/" method="post" onsubmit="showLoading()">
                     <div class="form-group">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                            <label for="max_auctions">
-                                <i class="fas fa-list"></i> <span id="auction-field-label">Antall auksjoner</span>
+                            <label for="max_auctions" style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calculator" id="auction-icon"></i>
+                                <span id="auction-field-label">Antall auksjoner</span>
                             </label>
                             <button type="button" onclick="toggleAuctionInput()" class="btn btn-sm" style="padding: 5px 10px; font-size: 0.8em;">
                                 <i class="fas fa-exchange-alt"></i> Bytt til <span id="toggle-text">auksjonsnavn</span>
                             </button>
                         </div>
-                        <input type="text" id="max_auctions" name="max_auctions" placeholder="La stå tomt for alle auksjoner" data-mode="number">
-                        <input type="hidden" id="input_mode" name="input_mode" value="number">
+                        <div style="position: relative;">
+                            <input type="text" id="max_auctions" name="max_auctions" placeholder="La stå tomt for alle auksjoner" data-mode="number">
+                            <div id="input-mode-indicator" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666;">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                        </div>
+                        <small id="input-hint" style="color: #666; display: block; margin-top: 5px;">Skriv inn antall auksjoner du vil hente</small>
                     </div>
                     
                     <div class="form-group">
@@ -215,24 +221,21 @@
                     }, 1000); // Fjern elementet etter fade-out animasjonen
                 }, 5000); // 5 sekunder istedenfor 10
             });
+
+            toggleAuctionInput();  // Sett initial stil
         });
 
         function showLoading() {
             const submitButton = document.getElementById('submitButton');
             const stopButton = document.getElementById('stopButton');
             const loadingMessage = document.getElementById('loadingMessage');
-            const input = document.getElementById('max_auctions');
             
             // Disable submit button and show stop button
             if (submitButton) submitButton.disabled = true;
             if (stopButton) stopButton.style.display = 'block';
             
             // Show initial status message
-            var auctionValue = input.value || 'alle';
-            var auctionText = input.dataset.mode === 'name' ? 
-                `<li><strong>Søker etter auksjon:</strong> ${auctionValue}</li>` :
-                `<li><strong>Antall auksjoner:</strong> ${auctionValue}</li>`;
-            
+            var auctions = document.getElementById('max_auctions').value || 'alle';
             var items = document.getElementById('max_items_per_auction').value || 'alle';
             var searchTerm = document.getElementById('search_term').value || 'ingen';
             var searchYear = document.getElementById('search_term_year').value || 'ingen';
@@ -241,7 +244,7 @@
                 loadingMessage.innerHTML = "<div class='status-info'>" +
                     "<h3><i class='fas fa-cog fa-spin'></i> Scraperen jobber med følgende innstillinger:</h3>" +
                     "<ul>" +
-                    auctionText +
+                    "<li><strong>Antall auksjoner:</strong> " + auctions + "</li>" +
                     "<li><strong>Antall objekter per auksjon:</strong> " + items + "</li>" +
                     "<li><strong>Søk i objekt-kolonnen:</strong> " + searchTerm + "</li>" +
                     "<li><strong>Søk i års-kolonnen:</strong> " + searchYear + "</li>" +
@@ -272,24 +275,32 @@
             const input = document.getElementById('max_auctions');
             const label = document.getElementById('auction-field-label');
             const toggleText = document.getElementById('toggle-text');
-            const inputMode = document.getElementById('input_mode');
+            const icon = document.getElementById('auction-icon');
+            const modeIndicator = document.getElementById('input-mode-indicator');
+            const hint = document.getElementById('input-hint');
             
             if (input.dataset.mode === 'number') {
                 // Bytt til auksjonsnavn-modus
                 input.dataset.mode = 'name';
-                inputMode.value = 'name';
                 input.placeholder = 'Skriv inn navn på auksjonen';
                 input.value = '';
                 label.textContent = 'Søk etter auksjonsnavn';
                 toggleText.textContent = 'antall';
+                icon.className = 'fas fa-search';
+                modeIndicator.innerHTML = '<i class="fas fa-font"></i>';
+                hint.textContent = 'Skriv inn navnet på auksjonen du vil søke etter';
+                input.style.borderColor = '#4CAF50';  // Grønn farge for søkemodus
             } else {
                 // Bytt til antall-modus
                 input.dataset.mode = 'number';
-                inputMode.value = 'number';
                 input.placeholder = 'La stå tomt for alle auksjoner';
                 input.value = '';
                 label.textContent = 'Antall auksjoner';
                 toggleText.textContent = 'auksjonsnavn';
+                icon.className = 'fas fa-calculator';
+                modeIndicator.innerHTML = '<i class="fas fa-calculator"></i>';
+                hint.textContent = 'Skriv inn antall auksjoner du vil hente';
+                input.style.borderColor = '#3498db';  // Blå farge for antall-modus
             }
         }
     </script>
