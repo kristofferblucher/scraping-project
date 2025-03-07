@@ -89,11 +89,304 @@
             border-left-color: #22c55e;
             color: #166534;
         }
+
+        .select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .select-wrapper select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 100%;
+            padding: 12px 35px 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            background-color: white;
+            cursor: pointer;
+            font-size: 1em;
+            color: #1a202c;
+            transition: all 0.3s ease;
+        }
+
+        .select-wrapper select:hover {
+            border-color: #cbd5e0;
+            background-color: #f8fafc;
+        }
+
+        .select-wrapper select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+        }
+
+        .select-wrapper .fa-chevron-down {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4a5568;
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+
+        .select-wrapper select:focus + .fa-chevron-down {
+            transform: translateY(-50%) rotate(180deg);
+            color: var(--secondary-color);
+        }
+
+        .loading-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            margin-top: 0;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .status-header h2 {
+            margin: 0;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .log-btn:hover {
+            background-color: #2980b9;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .status-info {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-info.success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .status-info.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .download-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #22c55e;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #16a34a;
+            transform: translateY(-2px);
+        }
+
+        .content-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+            align-items: stretch;
+        }
+
+        .form-container, .loading-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 8px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group small {
+            margin-top: 3px;
+        }
+
+        .button-group {
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .status-header {
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .status-info {
+            padding: 15px;
+            margin: 12px 0;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+        }
+
+        input, select {
+            padding: 8px 12px;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #loadingMessage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-info {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-info.success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .status-info.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .download-section {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .flash-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .flash {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.5s ease-out;
+            max-width: 400px;
+        }
+
+        .flash.error {
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .flash.warning {
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .flash.info {
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1><i class="fas fa-coins"></i> Auksjonsdata-Scraperen</h1>
+
+        <div id="flashContainer" class="flash-container"></div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -115,7 +408,21 @@
         <div class="content-container">
             <div class="form-container">
                 <h2><i class="fas fa-cog"></i> Innstillinger</h2>
-                <form action="/" method="post" onsubmit="showLoading()">
+                <form id="scrapingForm" onsubmit="handleSubmit(event)">
+                    <div class="form-group">
+                        <label for="source" style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-database"></i>
+                            <span>Velg auksjonshus</span>
+                        </label>
+                        <div class="select-wrapper">
+                            <select id="source" name="source" class="form-control">
+                                <option value="original">Oslo Myntgalleri</option>
+                                <option value="new">Meyer Eek</option>
+                            </select>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                             <label for="max_auctions" style="display: flex; align-items: center; gap: 8px;">
@@ -168,7 +475,7 @@
                         <button type="submit" id="submitButton" class="action-btn">
                             <i class="fas fa-play"></i> Start Skraping
                         </button>
-                        <button type="submit" id="stopButton" formaction="/stop" class="action-btn stop-btn" style="display:none;">
+                        <button type="button" id="stopButton" class="action-btn stop-btn" style="display:none;" onclick="stopScraping()">
                             <i class="fas fa-stop"></i> Stopp Scraping
                         </button>
                     </div>
@@ -176,14 +483,16 @@
             </div>
 
             <div class="loading-container">
-                <h2><i class="fas fa-info-circle"></i> Status</h2>
-                <div id="loadingMessage" style="display:none;"></div>
+                <div class="status-header">
+                    <h2><i class="fas fa-info-circle"></i> Status</h2>
+                    <a href="/scraping-log" class="btn log-btn" id="log-button">
+                        <i class="fas fa-history"></i> Vis Scraping-logg
+                    </a>
+                </div>
                 <div id="warning-message" style="display: none;">
                     <i class="fas fa-exclamation-triangle"></i> Stopp scraperen før du ser loggen.
                 </div>
-                <a href="/scraping-log" class="btn" id="log-button">
-                    <i class="fas fa-history"></i> Vis Scraping-logg
-                </a>
+                <div id="loadingMessage" style="display:none;"></div>
             </div>
         </div>
     </div>
@@ -195,9 +504,13 @@
             let logButton = document.getElementById("log-button");
             let warningMessage = document.getElementById("warning-message");
             let stopButton = document.getElementById("stopButton");
+            let submitButton = document.getElementById("submitButton");
 
             if (stopButton) {
-                stopButton.style.display = 'none';
+                stopButton.style.display = scrapingActive ? 'block' : 'none';
+            }
+            if (submitButton) {
+                submitButton.disabled = scrapingActive;
             }
 
             if (scrapingActive) {
@@ -218,11 +531,11 @@
                     message.style.opacity = '0';
                     setTimeout(function() {
                         message.remove();
-                    }, 1000); // Fjern elementet etter fade-out animasjonen
-                }, 5000); // 5 sekunder istedenfor 10
+                    }, 1000);
+                }, 5000);
             });
 
-            toggleAuctionInput();  // Sett initial stil
+            toggleAuctionInput();
         });
 
         function showLoading() {
@@ -237,38 +550,128 @@
             // Show initial status message
             var auctions = document.getElementById('max_auctions').value || 'alle';
             var items = document.getElementById('max_items_per_auction').value || 'alle';
-            var searchTerm = document.getElementById('search_term').value || 'ingen';
-            var searchYear = document.getElementById('search_term_year').value || 'ingen';
-
-            if (loadingMessage) {
-                loadingMessage.innerHTML = "<div class='status-info'>" +
-                    "<h3><i class='fas fa-cog fa-spin'></i> Scraperen jobber med følgende innstillinger:</h3>" +
-                    "<ul>" +
-                    "<li><strong>Antall auksjoner:</strong> " + auctions + "</li>" +
-                    "<li><strong>Antall objekter per auksjon:</strong> " + items + "</li>" +
-                    "<li><strong>Søk i objekt-kolonnen:</strong> " + searchTerm + "</li>" +
-                    "<li><strong>Søk i års-kolonnen:</strong> " + searchYear + "</li>" +
-                    "</ul>" +
-                    "</div>";
-                loadingMessage.style.display = 'block';
-            }
             
-            disableLogButton();
+            loadingMessage.innerHTML = `
+                <div class="status-info">
+                    <div class="status-content">
+                        <i class="fas fa-spinner fa-spin"></i> Starter scraping...
+                        <br>
+                        <small>Henter ${auctions} auksjoner med ${items} objekter per auksjon</small>
+                    </div>
+                </div>
+            `;
+            loadingMessage.style.display = 'block';
+        }
+
+        function showFlash(message, type = 'info') {
+            const flashContainer = document.getElementById('flashContainer');
+            const flash = document.createElement('div');
+            flash.className = `flash ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            if (type === 'warning') icon = 'exclamation-triangle';
+            
+            flash.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            flashContainer.appendChild(flash);
+            
+            // Fade out and remove after 5 seconds
+            setTimeout(() => {
+                flash.style.animation = 'fadeOut 0.5s ease-out';
+                setTimeout(() => {
+                    flashContainer.removeChild(flash);
+                }, 500);
+            }, 5000);
+        }
+
+        function validateNumberInput(value, fieldName) {
+            if (value && isNaN(value)) {
+                showFlash(`"${value}" er ikke et gyldig tall for ${fieldName}`, 'error');
+                return false;
+            }
             return true;
         }
 
-        function disableLogButton() {
-            let logButton = document.getElementById("log-button");
-            let warningMessage = document.getElementById("warning-message");
-
-            if (logButton) {
-                logButton.style.pointerEvents = "none";
-                logButton.style.opacity = "0.5";
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            const maxAuctions = document.getElementById('max_auctions').value;
+            const maxItems = document.getElementById('max_items_per_auction').value;
+            const mode = document.getElementById('max_auctions').getAttribute('data-mode');
+            
+            // Validate number inputs if in number mode
+            if (mode === 'number' && maxAuctions) {
+                if (!validateNumberInput(maxAuctions, 'antall auksjoner')) return;
+            }
+            if (maxItems) {
+                if (!validateNumberInput(maxItems, 'antall objekter')) return;
             }
 
-            if (warningMessage) {
-                warningMessage.style.display = "none";
-            }
+            const formData = new FormData(event.target);
+            formData.append('input_mode', mode);  // Legg til input-modusen
+            
+            showLoading();
+            
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const loadingMessage = document.getElementById('loadingMessage');
+                const submitButton = document.getElementById('submitButton');
+                const stopButton = document.getElementById('stopButton');
+                
+                if (data.status === 'success') {
+                    loadingMessage.innerHTML = `
+                        <div class="status-info success">
+                            <div class="status-content">
+                                <i class="fas fa-check-circle"></i> Scraping fullført!
+                                <br>
+                                <small>Data er lagret i filen: ${data.download_filename}</small>
+                            </div>
+                            <div class="download-section">
+                                <a href="/download-latest?filename=${data.download_filename}" class="download-btn">
+                                    <i class="fas fa-download"></i> Last ned Excel-fil
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    loadingMessage.innerHTML = `
+                        <div class="status-info error">
+                            <div class="status-content">
+                                <i class="fas fa-exclamation-circle"></i> Feil: ${data.message}
+                            </div>
+                        </div>
+                    `;
+                    showFlash(data.message, 'error');
+                }
+                
+                submitButton.disabled = false;
+                stopButton.style.display = 'none';
+            })
+            .catch(error => {
+                const loadingMessage = document.getElementById('loadingMessage');
+                const submitButton = document.getElementById('submitButton');
+                const stopButton = document.getElementById('stopButton');
+                
+                loadingMessage.innerHTML = `
+                    <div class="status-info error">
+                        <div class="status-content">
+                            <i class="fas fa-exclamation-circle"></i> En feil oppstod: ${error.message}
+                        </div>
+                    </div>
+                `;
+                showFlash(error.message, 'error');
+                
+                submitButton.disabled = false;
+                stopButton.style.display = 'none';
+            });
         }
 
         function toggleAuctionInput() {
@@ -276,32 +679,59 @@
             const label = document.getElementById('auction-field-label');
             const toggleText = document.getElementById('toggle-text');
             const icon = document.getElementById('auction-icon');
-            const modeIndicator = document.getElementById('input-mode-indicator');
             const hint = document.getElementById('input-hint');
+            const indicator = document.getElementById('input-mode-indicator');
             
-            if (input.dataset.mode === 'number') {
-                // Bytt til auksjonsnavn-modus
-                input.dataset.mode = 'name';
-                input.placeholder = 'Skriv inn navn på auksjonen';
-                input.value = '';
-                label.textContent = 'Søk etter auksjonsnavn';
+            if (input.getAttribute('data-mode') === 'number') {
+                input.setAttribute('data-mode', 'text');
+                label.textContent = 'Auksjonsnavn';
                 toggleText.textContent = 'antall';
                 icon.className = 'fas fa-search';
-                modeIndicator.innerHTML = '<i class="fas fa-font"></i>';
-                hint.textContent = 'Skriv inn navnet på auksjonen du vil søke etter';
-                input.style.borderColor = '#4CAF50';  // Grønn farge for søkemodus
+                hint.textContent = 'Skriv inn navnet på auksjonen du vil hente';
+                indicator.innerHTML = '<i class="fas fa-search"></i>';
             } else {
-                // Bytt til antall-modus
-                input.dataset.mode = 'number';
-                input.placeholder = 'La stå tomt for alle auksjoner';
-                input.value = '';
+                input.setAttribute('data-mode', 'number');
                 label.textContent = 'Antall auksjoner';
                 toggleText.textContent = 'auksjonsnavn';
                 icon.className = 'fas fa-calculator';
-                modeIndicator.innerHTML = '<i class="fas fa-calculator"></i>';
                 hint.textContent = 'Skriv inn antall auksjoner du vil hente';
-                input.style.borderColor = '#3498db';  // Blå farge for antall-modus
+                indicator.innerHTML = '<i class="fas fa-calculator"></i>';
             }
+        }
+
+        function disableLogButton() {
+            const logButton = document.getElementById("log-button");
+            if (logButton) {
+                logButton.style.opacity = "0.5";
+                logButton.style.pointerEvents = "none";
+            }
+        }
+
+        function stopScraping() {
+            fetch('/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const submitButton = document.getElementById('submitButton');
+                    const stopButton = document.getElementById('stopButton');
+                    const loadingMessage = document.getElementById('loadingMessage');
+                    
+                    // Enable submit button and hide stop button
+                    if (submitButton) submitButton.disabled = false;
+                    if (stopButton) stopButton.style.display = 'none';
+                    if (loadingMessage) loadingMessage.textContent = 'Scraping stoppet.';
+                    
+                    document.documentElement.setAttribute('data-scraping-active', 'false');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
     </script>
 </body>

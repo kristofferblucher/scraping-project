@@ -1,6 +1,6 @@
 import shutil
 from threading import Event
-from flask import Flask, request, send_from_directory, render_template_string, render_template, jsonify, flash, redirect, url_for
+from flask import Flask, request, send_from_directory, render_template_string, render_template, jsonify, flash, redirect, url_for, session
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 from bs4 import BeautifulSoup
@@ -9,6 +9,8 @@ import datetime
 import re
 import os
 import numpy as np
+from scrapers.original_scraper import OriginalScraper
+from scrapers.new_scraper import NewScraper
 
 
 
@@ -45,11 +47,52 @@ def get_full_urls(url, auction_name=None):
             if event.find('a'):
                 # Hent all tekst fra event-raden
                 event_text = event.get_text(separator=' ', strip=True).lower()
-                # Sjekk om ALLE søkeordene finnes i teksten
-                search_terms = auction_name.split()
-                if all(term in event_text for term in search_terms):
-                    matching_urls.append(f"{BASE_URL}{event.find('a')['href']}")
-                    print(f"Fant matching auksjon: {event_text}")
+                print(f"\nSjekker auksjon tekst: {event_text}")
+                
+                # Spesialhåndtering for "nr. X" søk
+                if 'nr.' in auction_name or 'nr ' in auction_name:
+                    print(f"\nDEBUG: Full event text: {event_text}")
+                    print(f"DEBUG: Søker i tekst: {auction_name}")
+                    
+                    # Finn søkenummeret først
+                    search_number = re.search(r'nr\.?\s*(\d+)', auction_name)
+                    if search_number:
+                        search_num = search_number.group(1)
+                        print(f"DEBUG: Søker etter auksjonsnummer: {search_num}")
+                        
+                        # Del opp teksten i deler basert på "nr."
+                        parts = re.split(r'(nr\.?\s*\d+)', event_text)
+                        
+                        # Gå gjennom hver del og sjekk om den inneholder et nummer
+                        for i, part in enumerate(parts):
+                            if 'nr' in part.lower():
+                                number_match = re.search(r'nr\.?\s*(\d+)', part.lower())
+                                if number_match:
+                                    found_num = number_match.group(1)
+                                    print(f"DEBUG: Analyserer del: '{part}'")
+                                    print(f"DEBUG: Fant nummer: {found_num}")
+                                    
+                                    # Sjekk om dette er et eksakt treff
+                                    if found_num == search_num:
+                                        # Sjekk konteksten rundt nummeret
+                                        before = parts[i-1] if i > 0 else ""
+                                        after = parts[i+1] if i < len(parts)-1 else ""
+                                        
+                                        # Sjekk at dette ikke er del av et større nummer
+                                        if not re.search(r'\d+' + found_num, before) and \
+                                           not re.search(found_num + r'\d+', after):
+                                            print(f"DEBUG: ✓ Eksakt match funnet: {found_num}")
+                                            matching_urls.append(f"{BASE_URL}{event.find('a')['href']}")
+                                            print(f"Fant matching auksjon: {event_text}")
+                                            break
+                                    else:
+                                        print(f"DEBUG: ✗ Ingen match: {found_num} != {search_num}")
+                else:
+                    # For andre søk, bruk den eksisterende logikken
+                    search_terms = auction_name.split()
+                    if all(term in event_text for term in search_terms):
+                        matching_urls.append(f"{BASE_URL}{event.find('a')['href']}")
+                        print(f"Fant matching auksjon: {event_text}")
         return matching_urls
     return [f"{BASE_URL}{event.find('a')['href']}" for event in events if event.find('a')]
 
@@ -225,7 +268,13 @@ def matches_search_criteria(item_data, search_term=None, search_term_year=None):
             
     return matches
 
-def main(max_auctions=None, max_items_per_auction=None, search_term=None, search_term_year=None, custom_filename=None, auction_name=None):
+def get_scraper(source):
+    return {
+        'original': OriginalScraper(),
+        'new': NewScraper()
+    }.get(source, OriginalScraper())
+
+def main(max_auctions=None, max_items_per_auction=None, search_term=None, search_term_year=None, custom_filename=None, auction_name=None, source='original'):
     global stop_event, scraping_active
     stop_event.clear()
     scraping_active = True
@@ -233,38 +282,13 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
     try:
         print("Starting scraping process...")
         
-        # Konverter max_auctions til int hvis det er en streng
-        if isinstance(max_auctions, str):
-            try:
-                max_auctions = int(max_auctions)
-            except ValueError:
-                print(f"Ugyldig verdi for max_auctions: {max_auctions}")
-                max_auctions = None
+        # Velg riktig scraper
+        scraper = get_scraper(source)
+        scraper.set_stop_event(stop_event)
+        scraper.set_scraping_active(scraping_active)
         
-        if stop_event.is_set():
-            raise Exception("Scraping was stopped")
-
-        base_url = f'{BASE_URL}/Events'
-        page = 1
-        all_auction_urls = []
-        
-        # Samle inn auksjons-URLer
-        while True and not stop_event.is_set():
-            url = f"{base_url}?page={page}"
-            print(f"Fetching auctions from page {page}")
-            new_urls = get_full_urls(url, auction_name)
-            
-            if not new_urls:
-                break
-                
-            all_auction_urls.extend(new_urls)
-            print(f"Found {len(new_urls)} auctions on page {page}")
-            
-            if not auction_name and max_auctions is not None and len(all_auction_urls) >= max_auctions:
-                all_auction_urls = all_auction_urls[:max_auctions]
-                break
-                
-            page += 1
+        # Hent auksjoner
+        all_auction_urls = scraper.get_auctions(max_auctions, auction_name)
 
         if not all_auction_urls:
             raise Exception("Ingen auksjoner matchet søket")
@@ -274,27 +298,19 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
 
         print(f"Total auctions found: {len(all_auction_urls)}")
 
-        # Process items
+        # Prosesser auksjoner
         item_data_list = []
-        with ThreadPoolExecutor(max_workers=DEFAULT_MAX_WORKERS) as executor:
-            futures = []
-            for auction_url in all_auction_urls:
-                if stop_event.is_set():
-                    raise Exception("Scraping was stopped")
-                    
-                item_urls = get_auction_item_urls(auction_url, max_items_per_auction)
-                if item_urls:
-                    for item_url in item_urls:
-                        futures.append(executor.submit(get_auction_item_data, item_url))
-
-            for future in as_completed(futures):
-                if stop_event.is_set():
-                    raise Exception("Scraping was stopped")
-
-                item_data = future.result()
-                if item_data:
-                    if matches_search_criteria(item_data, search_term, search_term_year):
-                        item_data_list.append(item_data)
+        for auction_url in all_auction_urls:
+            if stop_event.is_set():
+                raise Exception("Scraping was stopped")
+            
+            items = scraper.process_auction(
+                auction_url, 
+                max_items=max_items_per_auction,
+                search_term=search_term,
+                search_term_year=search_term_year
+            )
+            item_data_list.extend(items)
 
         if not item_data_list:
             raise Exception("Ingen objekter matchet søkekriteriene")
@@ -340,7 +356,13 @@ def main(max_auctions=None, max_items_per_auction=None, search_term=None, search
         full_path = os.path.join(OUTPUT_DIR, filename)
         latest_path = os.path.join(OUTPUT_DIR, latest_filename)
 
-        df.to_excel(full_path, index=False)
+        # Lagre til ny fil
+        with pd.ExcelWriter(full_path, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+        
+        # Kopier til latest-filen og overskrive hvis den eksisterer
+        if os.path.exists(latest_path):
+            os.remove(latest_path)
         shutil.copy(full_path, latest_path)
 
         print(f"📁 Data eksportert til {filename}")
@@ -361,24 +383,30 @@ def log_user_activity(activity):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     global scraping_active
-
+    
+    # Fjern alle flash-meldinger når siden lastes på nytt via GET
+    if request.method == 'GET':
+        session.clear()
+    
     if request.method == 'POST':
         if scraping_active:
-            flash('Scraping pågår allerede. Vennligst vent eller stopp den nåværende prosessen.', 'error')
-            return render_template('index.html', scraping_active=scraping_active)
-        
-        print("Received POST request")
-        
+            flash("Scraping er allerede i gang", "error")
+            return jsonify({
+                "status": "error",
+                "message": "Scraping er allerede i gang"
+            }), 400
+
         try:
             # Hent form data
+            source = request.form.get('source', 'original')
             max_auctions_input = request.form.get('max_auctions', '').strip()
-            input_mode = request.form.get('input_mode', 'number').strip()
             max_items_per_auction = request.form.get('max_items_per_auction', '').strip()
             search_term = request.form.get('search_term', '').strip()
             search_term_year = request.form.get('search_term_year', '').strip()
             custom_filename = request.form.get('custom_filename', '').strip()
+            input_mode = request.form.get('input_mode', 'number')  # Hent input mode
 
-            # Sjekk om max_auctions er et tall eller auksjonsnavn basert på input_mode
+            # Sjekk om max_auctions er et tall eller auksjonsnavn basert på modus
             auction_name = None
             max_auctions = None
             
@@ -386,14 +414,15 @@ def index():
                 if input_mode == 'number':
                     try:
                         max_auctions = int(max_auctions_input)
-                        if max_auctions <= 0:
-                            flash('Antall auksjoner må være et positivt tall.', 'error')
-                            return render_template('index.html', scraping_active=scraping_active)
                         auction_name = None
                     except ValueError:
-                        flash('Vennligst skriv inn et gyldig tall for antall auksjoner.', 'error')
-                        return render_template('index.html', scraping_active=scraping_active)
-                else:  # input_mode == 'name'
+                        error_msg = f'"{max_auctions_input}" er ikke et gyldig tall for antall auksjoner'
+                        flash(error_msg, "error")
+                        return jsonify({
+                            "status": "error",
+                            "message": error_msg
+                        }), 400
+                else:
                     auction_name = max_auctions_input
                     max_auctions = None
 
@@ -401,34 +430,59 @@ def index():
             if max_items_per_auction:
                 try:
                     max_items_per_auction = int(max_items_per_auction)
-                    if max_items_per_auction <= 0:
-                        flash('Antall objekter per auksjon må være et positivt tall.', 'error')
-                        return render_template('index.html', scraping_active=scraping_active)
                 except ValueError:
-                    flash('Antall objekter per auksjon må være et tall.', 'error')
-                    return render_template('index.html', scraping_active=scraping_active)
+                    error_msg = f'"{max_items_per_auction}" er ikke et gyldig tall for antall objekter'
+                    flash(error_msg, "error")
+                    return jsonify({
+                        "status": "error",
+                        "message": error_msg
+                    }), 400
 
             print(f"Processed inputs: max_auctions={max_auctions}, auction_name={auction_name}, max_items={max_items_per_auction}")
             
             print("Calling main()...")
-            result = main(
-                max_auctions=max_auctions,
-                max_items_per_auction=max_items_per_auction,
-                search_term=search_term,
-                search_term_year=search_term_year,
-                custom_filename=custom_filename,
-                auction_name=auction_name
-            )
+            try:
+                result = main(
+                    max_auctions=max_auctions,
+                    max_items_per_auction=max_items_per_auction,
+                    search_term=search_term,
+                    search_term_year=search_term_year,
+                    custom_filename=custom_filename,
+                    auction_name=auction_name,
+                    source=source
+                )
+            except Exception as e:
+                error_message = str(e)
+                if "Ingen auksjoner matchet søket" in error_message:
+                    if auction_name:
+                        error_message = f'Fant ingen auksjoner som matcher "{auction_name}"'
+                    else:
+                        error_message = "Fant ingen auksjoner"
+                elif "Ingen objekter matchet søkekriteriene" in error_message:
+                    error_message = "Fant ingen objekter som matcher søkekriteriene"
+                
+                flash(error_message, "error")
+                return jsonify({
+                    "status": "error",
+                    "message": error_message
+                }), 400
             
             if not result:
-                scraping_active = False
-                flash('Ingen resultater funnet.', 'error')
-                return render_template('index.html', scraping_active=scraping_active)
+                error_msg = "Ingen resultater funnet"
+                flash(error_msg, "error")
+                return jsonify({
+                    "status": "error",
+                    "message": error_msg
+                }), 400
             
             print(f"File generated: {result['path']}")
             
+            # Hent auksjonshus navn basert på source
+            auction_house = "Oslo Myntgalleri" if source == 'original' else "Meyer Eek"
+            
             activity = (
                 f"Scraping fullført\n"
+                f"• Auksjonshus: {auction_house}\n"
                 f"• Antall auksjoner: {max_auctions if max_auctions else 'alle'}\n"
                 f"• Auksjonsnavn: {auction_name if auction_name else 'ikke spesifisert'}\n"
                 f"• Antall objekter per auksjon: {max_items_per_auction if max_items_per_auction else 'alle'}\n"
@@ -439,34 +493,46 @@ def index():
             )
             log_user_activity(activity)
             
-            return render_template('success.html', 
-                                file_path=result['path'], 
-                                download_filename=result['download_filename'],
-                                scraping_active=False)
+            flash("Scraping fullført!", "success")
+            return jsonify({
+                "status": "success",
+                "file_path": result['path'],
+                "download_filename": result['download_filename']
+            })
                 
         except Exception as e:
-            print(f"Error in main(): {str(e)}")
+            print(f"Error in main(): {e}")
             scraping_active = False
-            flash(str(e), 'error')
-            return render_template('index.html', scraping_active=scraping_active)
+            error_msg = str(e)
+            flash(error_msg, "error")
+            return jsonify({
+                "status": "error",
+                "message": error_msg
+            }), 500
 
     return render_template('index.html', scraping_active=scraping_active)
 
 @app.route('/stop', methods=['POST'])
 def stop_scraping():
-    global scraping_active
+    global scraping_active, stop_event
     stop_event.set()  # Aktiverer stop-hendelsen
-    print("Scraping requested to stop.")
     scraping_active = False
+    print("Scraping requested to stop.")
     
     # Logg at scrapingen ble stoppet manuelt
     activity = "Scraping stoppet manuelt av bruker"
     log_user_activity(activity)
     
-    return render_template('index.html', scraping_active=scraping_active)
+    return jsonify({
+        "status": "success",
+        "message": "Scraping stopped"
+    })
 
 @app.route('/scraping-log')
 def view_scraping_log():
+    # Fjern alle flash-meldinger når man går til logg-siden
+    session.clear()
+    
     log_file = 'scraping_log.txt'
     
     # Sjekk om filen eksisterer før du prøver å lese den
